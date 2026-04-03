@@ -143,3 +143,15 @@ Further updates were applied directly to `generate_synthetic_workbook.py` (no ma
   - hard maximum is capped.
 - Preserved strict conditional blanking so controlled columns are populated only for valid `Skill Level 1` types.
 - Preserved exact global row-type distribution targets while improving profile realism.
+
+**Update Date: March 18, 2026 (Example Workbook Reuse and Identity Consistency Fix)**
+
+The generator was updated to use a separate example workbook as a direct text source for profile content:
+- Read `/Users/danza/Downloads/Dummy_Profile_Examples.xlsx`.
+- Reused `Summary/bio` examples as a source pool for person-level summaries.
+- Reused `Description` examples as a source pool for populated job-history descriptions.
+
+A consistency defect was also corrected:
+- Some generated rows previously reused example text containing a different person name than the row's `Resource Name`.
+- The generator now rewrites copied example text so the embedded person name matches the generated `Resource Name`.
+- This keeps person identity consistent across `Resource Name`, `Summary/bio`, and copied profile text.

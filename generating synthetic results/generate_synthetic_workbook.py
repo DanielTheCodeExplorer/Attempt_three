@@ -232,6 +232,38 @@ def load_dummy_profile_style(path: str, log=None):
     return style
 
 
+def load_dummy_profile_examples(path: str, log=None):
+    workbook = Path(path)
+    if not workbook.exists():
+        if log:
+            log(f"Dummy profile example workbook not found: {path}")
+        return {"summaries": [], "descriptions": []}
+
+    try:
+        df = pd.read_excel(workbook, sheet_name="Dummy Profile Examples")
+    except Exception:
+        try:
+            df = pd.read_excel(workbook, sheet_name="Paste Ready")
+        except Exception as e:
+            if log:
+                log(f"Could not read dummy profile examples: {type(e).__name__}: {e}")
+            return {"summaries": [], "descriptions": []}
+
+    summary_col = next((c for c in df.columns if str(c).strip().lower() == "summary/bio"), None)
+    description_col = next((c for c in df.columns if str(c).strip().lower() == "description"), None)
+
+    summaries = []
+    descriptions = []
+    if summary_col:
+        summaries = [str(v).strip() for v in df[summary_col].dropna().tolist() if str(v).strip()]
+    if description_col:
+        descriptions = [str(v).strip() for v in df[description_col].dropna().tolist() if str(v).strip()]
+
+    if log:
+        log(f"Loaded dummy profile examples: summaries={len(summaries)}, descriptions={len(descriptions)}")
+    return {"summaries": summaries, "descriptions": descriptions}
+
+
 def load_bio_examples(uri: str, column: str = "Moreinfo", max_examples: int = 1000, log=None):
     if pl is None:
         if log:
@@ -303,6 +335,59 @@ def trim_to_length(text: str, target_len: int) -> str:
         if idx > target_len * 0.6:
             return cut[: idx + (1 if sep == ". " else 0)].rstrip(" ,.;:")
     return cut.rstrip(" ,.;:")
+
+
+def personalize_example_text(text: str, resource_name: str) -> str:
+    text = str(text).strip()
+    resource_name = str(resource_name).strip()
+    if not text or not resource_name:
+        return text
+
+    name_patterns = []
+    full_name_match = re.match(r"^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})(\s+(?:is|has|was)\b)", text)
+    if full_name_match:
+        full_name = full_name_match.group(1)
+        first_name = full_name.split()[0]
+        name_patterns.append((re.escape(full_name), resource_name))
+        name_patterns.append((re.escape(first_name) + r"'s", resource_name.split()[0] + "'s"))
+        name_patterns.append((r"\b" + re.escape(first_name) + r"\b", resource_name.split()[0]))
+
+    pronoun_replacements = {
+        r"\bHe\b": "They",
+        r"\bShe\b": "They",
+        r"\bhe\b": "they",
+        r"\bshe\b": "they",
+        r"\bHis\b": "Their",
+        r"\bHer\b": "Their",
+        r"\bhis\b": "their",
+        r"\bher\b": "their",
+        r"\bhim\b": "them",
+    }
+
+    for pattern, replacement in name_patterns:
+        text = re.sub(pattern, replacement, text)
+    for pattern, replacement in pronoun_replacements.items():
+        text = re.sub(pattern, replacement, text)
+    return text
+
+
+def normalize_summary_intro(text: str) -> str:
+    words = text.split()
+    if len(words) >= 4 and words[2].lower() == "is" and words[3].lower() == "an":
+        return "They are an " + " ".join(words[4:])
+    return text
+
+
+def align_summary_subject(text: str, resource_name: str) -> str:
+    words = text.split()
+    if words and words[0].lower() == "they":
+        replacement = resource_name.split()
+        if len(words) >= 3 and words[1].lower() == "are":
+            words = replacement + ["is"] + words[2:]
+        else:
+            words = replacement + words[1:]
+        return " ".join(words)
+    return text
 
 
 def generate_summary_bio(target_len: int, style: dict) -> str:
@@ -396,6 +481,23 @@ def generate_role_description(target_len: int, style: dict) -> str:
 
     text = limit_text_shape(text, max_sentences=8, max_paragraphs=2)
     return trim_to_length(text, target_len)
+
+
+def choose_summary_bio(target_len: int, style: dict, example_pool, resource_name: str):
+    if example_pool:
+        text = personalize_example_text(random.choice(example_pool), resource_name)
+        text = normalize_summary_intro(text)
+        text = align_summary_subject(text, resource_name)
+        return trim_to_length(text, target_len)
+    text = normalize_summary_intro(generate_summary_bio(target_len, style))
+    text = align_summary_subject(text, resource_name)
+    return trim_to_length(text, target_len)
+
+
+def choose_role_description(target_len: int, style: dict, example_pool, resource_name: str):
+    if example_pool:
+        return trim_to_length(personalize_example_text(random.choice(example_pool), resource_name), target_len)
+    return generate_role_description(target_len, style)
 
 
 def format_legacy_date(dt: datetime) -> str:
@@ -529,7 +631,7 @@ def main():
         default="hf://datasets/lang-uk/recruitment-dataset-candidate-profiles-english/data/train-00000-of-00001.parquet",
     )
     parser.add_argument("--bio-style-column", default="Moreinfo")
-    parser.add_argument("--local-style-workbook", default="dummy_profiles 1.xlsx")
+    parser.add_argument("--local-style-workbook", default="/Users/danza/Downloads/Dummy_Profile_Examples.xlsx")
     args = parser.parse_args()
 
     log = make_logger(args.verbose)
@@ -559,6 +661,7 @@ def main():
     bio_examples = load_bio_examples(args.bio_style_uri, args.bio_style_column, log=log)
     bio_style = infer_bio_style(bio_examples)
     local_text_style = load_dummy_profile_style(args.local_style_workbook, log=log)
+    local_example_pool = load_dummy_profile_examples(args.local_style_workbook, log=log)
     log(
         f"Bio style profile: avg_sentences={bio_style['avg_sentences']}, "
         f"avg_words_per_sentence={bio_style['avg_words_per_sentence']}, "
@@ -668,7 +771,9 @@ def main():
 
         # Longer person-level summary text with variable lengths.
         summary_len = pick_length(col_meta["Summary/bio"]["length_profile"])
-        emp_profile[i]["Summary/bio"] = generate_summary_bio(summary_len, local_text_style)
+        emp_profile[i]["Summary/bio"] = choose_summary_bio(
+            summary_len, local_text_style, local_example_pool["summaries"], employees[i]["Resource Name"]
+        )
     log("Generated employee-level numeric, summary, and constant fields.")
 
     # Fill core person-consistent columns row by row (column-backed lists for speed).
@@ -1203,7 +1308,9 @@ def main():
                 data["Location"][r] = random.choice(location_pool)[:ln]
             if random.random() < 0.85:
                 ln = pick_length(col_meta["Description"]["length_profile"])
-                data["Description"][r] = generate_role_description(ln, local_text_style)
+                data["Description"][r] = choose_role_description(
+                    ln, local_text_style, local_example_pool["descriptions"], employees[eidx]["Resource Name"]
+                )
             if end is not None:
                 data["Job History End Date"][r] = format_legacy_date(end)
 

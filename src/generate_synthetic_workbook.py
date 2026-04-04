@@ -621,8 +621,8 @@ def derive_email(name: str, domain: str = "exampleconsulting.com") -> str:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--schema", default="schema_profile.json")
-    parser.add_argument("--output", default="synthetic_staff_talentlink_v3.xlsx")
+    parser.add_argument("--schema", default="data/inputs/schema_profile.json")
+    parser.add_argument("--output", default="synthetic talent link data.xlsx")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--log-interval", type=int, default=500)

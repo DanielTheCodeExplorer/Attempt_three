@@ -1,7 +1,7 @@
 from src.synthesis import create_empty_dataset
 
 
-def create_empty_dataset():
+def test_create_empty_dataset():
 
     df = create_empty_dataset()
 

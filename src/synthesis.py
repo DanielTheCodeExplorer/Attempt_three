@@ -11,6 +11,7 @@ def create_empty_dataset():
     data = get_data(schema)
     create_df = pd.DataFrame(columns=columns, data=data)
     create_df.to_excel("data/outputs/dataset.xlsx")
+    return create_df
 
 def get_schema():
     schema_path = Path("data/inputs/schema_profile.json")

@@ -11,3 +11,6 @@ dependencies = [
     "pandas",
     "polars",
 ]
+
+[tool.pytest.ini_options]
+pythonpath["."]

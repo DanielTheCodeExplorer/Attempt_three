@@ -2,7 +2,8 @@
 name = "skill-competency-calculator"
 version = "0.1.0"
 description = "Synthetic workbook generator for skill and competency data."
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.15"
+
 dependencies = [
     "Faker",
     "numpy",

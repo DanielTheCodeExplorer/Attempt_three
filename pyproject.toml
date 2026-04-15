@@ -10,6 +10,7 @@ dependencies = [
     "openpyxl",
     "pandas",
     "polars",
+    "scikit-learn",
 ]
 
 [tool.pytest.ini_options]

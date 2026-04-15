@@ -3,3 +3,5 @@ numpy
 Faker
 openpyxl
 polars
+scikit-learn
+pytest

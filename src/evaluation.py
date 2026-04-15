@@ -104,7 +104,7 @@ def render_evaluation_report(
         f"- Score rows evaluated: {metrics['score_rows']}",
         f"- Employees evaluated: {metrics['employee_count']}",
         f"- Unique skills evaluated: {metrics['skill_count']}",
-        f"- Average similarity score: {metrics['average_similarity']}",
+        f"- Average chunk similarity score: {metrics['average_similarity']}",
         f"- Average competency score: {metrics['average_competency_score']}",
         f"- High-band ratio: {metrics['high_band_ratio']}",
         "",
@@ -154,8 +154,9 @@ def render_evaluation_report(
             "",
             "## Interpretation",
             "- This evaluation is descriptive rather than benchmarked against a human-labelled ground truth.",
-            "- The results show how the current TF-IDF plus cosine-similarity approach distributes support scores across skills and employees.",
-            "- Low average scores indicate that many listed skills are weakly evidenced in the available descriptions under the current reference-text design.",
+            "- The results show how the current hybrid scorer distributes support scores across skills and employees.",
+            "- The current model combines direct exact or alias evidence with the strongest chunk-level TF-IDF similarity signal.",
+            "- Persistently low average scores indicate that many listed skills are still weakly evidenced in the available descriptions under the current reference and weighting design.",
         ]
     )
 

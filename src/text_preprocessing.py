@@ -4,6 +4,7 @@ import re
 WHITESPACE_PATTERN = re.compile(r"\s+")
 PUNCTUATION_PATTERN = re.compile(r"[^a-z0-9\s+#]")
 SENTENCE_SPLIT_PATTERN = re.compile(r"(?<=[.!?])\s+")
+LINE_SPLIT_PATTERN = re.compile(r"[\n\r]+|(?<=\.)\s+|(?<=!)\s+|(?<=\?)\s+|(?<=:)\s+|(?<=;)\s+")
 
 
 def preprocess_text(text: str) -> str:
@@ -22,6 +23,16 @@ def normalise_skill_name(skill: str) -> str:
     """Normalize a skill name for dictionary lookup and comparison."""
 
     return preprocess_text(skill)
+
+
+def split_text_into_chunks(text: str) -> list[str]:
+    """Split text into short evidence chunks for chunk-level scoring."""
+
+    if not text:
+        return []
+
+    chunks = [part.strip(" -\t") for part in LINE_SPLIT_PATTERN.split(str(text)) if part.strip(" -\t")]
+    return chunks or [str(text).strip()]
 
 
 def extract_evidence_excerpt(description: str, reference_text: str, skill: str) -> str:

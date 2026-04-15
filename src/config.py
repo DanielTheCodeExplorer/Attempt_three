@@ -7,7 +7,7 @@ class ScoreBand:
     """Represents a similarity threshold and its label."""
 
     label: str
-    minimum_similarity: float
+    minimum_score: float
 
 
 @dataclass(frozen=True)
@@ -35,11 +35,16 @@ class PipelineConfig:
         }
     )
     tfidf_max_features: int | None = 5000
-    tfidf_ngram_range: tuple[int, int] = (1, 2)
+    tfidf_ngram_range: tuple[int, int] = (1, 3)
+    tfidf_stop_words: str | None = "english"
+    tfidf_sublinear_tf: bool = True
+    exact_match_weight: float = 0.6
+    semantic_similarity_weight: float = 0.4
+    semantic_similarity_strong_threshold: float = 0.12
     score_bands: tuple[ScoreBand, ...] = (
-        ScoreBand(label="low", minimum_similarity=0.0),
-        ScoreBand(label="medium", minimum_similarity=0.2),
-        ScoreBand(label="high", minimum_similarity=0.45),
+        ScoreBand(label="low", minimum_score=0.0),
+        ScoreBand(label="medium", minimum_score=25.0),
+        ScoreBand(label="high", minimum_score=60.0),
     )
     default_skill_reference_template: str = (
         "Evidence of {skill} includes practical delivery using {skill} to solve problems, "
@@ -56,6 +61,20 @@ class PipelineConfig:
             "etl design": "Designs ETL processes to extract, transform, validate, and load data across systems.",
             "programme delivery": "Supports programme delivery through planning, coordination, tracking actions, and driving milestones.",
             "regulatory reporting": "Supports regulatory reporting by preparing accurate submissions, validating data, and meeting reporting requirements.",
+        }
+    )
+    skill_aliases: dict[str, tuple[str, ...]] = field(
+        default_factory=lambda: {
+            "python": ("pandas", "pyspark", "jupyter", "python scripting", "python automation"),
+            "sql": ("structured query language", "relational databases", "database querying", "sql queries", "joins"),
+            "data analysis": ("data analytics", "analyse data", "analyze data", "data insights", "pattern analysis"),
+            "power bi": ("powerbi", "dashboard reporting", "dashboards", "business intelligence reporting"),
+            "risk controls": ("control effectiveness", "controls testing", "control framework", "risk governance"),
+            "stakeholder management": ("stakeholder engagement", "stakeholder communication", "requirements gathering", "cross functional collaboration"),
+            "etl design": ("etl pipeline", "data pipelines", "extract transform load", "data integration"),
+            "programme delivery": ("program delivery", "project delivery", "workstream delivery", "milestone tracking", "delivery coordination"),
+            "regulatory reporting": ("regulatory submissions", "regulatory returns", "compliance reporting", "reporting requirements"),
+            "data governance": ("data quality", "data stewardship", "data standards", "governance framework"),
         }
     )
     excerpt_window_sentences: int = 1

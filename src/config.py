@@ -16,6 +16,10 @@ class PipelineConfig:
 
     input_csv_path: Path = Path("data/outputs/master_dataset.csv")
     output_csv_path: Path = Path("data/outputs/competency_scores.csv")
+    biography_input_csv_path: Path = Path("data/outputs/master_dataset.csv")
+    biography_dataset_csv_path: Path = Path("data/outputs/biography_dataset.csv")
+    biography_score_output_csv_path: Path = Path("data/outputs/biography_competency_scores.csv")
+    biography_evaluation_csv_path: Path = Path("data/outputs/biography_competency_evaluation.csv")
     evaluation_skill_summary_csv_path: Path = Path("data/outputs/competency_score_skill_summary.csv")
     evaluation_band_summary_csv_path: Path = Path("data/outputs/competency_score_band_summary.csv")
     evaluation_employee_summary_csv_path: Path = Path("data/outputs/competency_score_employee_summary.csv")
@@ -26,6 +30,8 @@ class PipelineConfig:
             "TalentLink ID": "talentlinkId",
             "Description": "description",
             "skills": "skills",
+            "Biography": "description",
+            "biography": "description",
         }
     )
     tfidf_max_features: int | None = 5000

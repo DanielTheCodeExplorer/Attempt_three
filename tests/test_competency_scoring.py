@@ -5,7 +5,12 @@ import pytest
 
 from src.competency_scoring import CompetencyScorer
 from src.config import PipelineConfig, ScoreBand
-from src.data_loader import load_and_prepare_dataset, parse_skills, validate_required_columns
+from src.data_loader import (
+    load_and_prepare_dataset,
+    parse_skills,
+    standardize_columns,
+    validate_required_columns,
+)
 from src.text_preprocessing import preprocess_text
 
 
@@ -58,6 +63,24 @@ def test_load_and_prepare_dataset_standardises_and_aggregates_rows(tmp_path: Pat
     assert prepared.loc[0, "skills"] == ["Python", "SQL"]
     assert "Built Python automations." in prepared.loc[0, "description"]
     assert "Created SQL reports." in prepared.loc[0, "description"]
+
+
+def test_standardize_columns_does_not_create_duplicate_description_columns():
+    df = pd.DataFrame(
+        [
+            {
+                "TalentLink ID": "1001",
+                "Description": "Job history description",
+                "Biography": "Biography text",
+                "skills": "['Python']",
+            }
+        ]
+    )
+
+    standardized = standardize_columns(df, PipelineConfig())
+
+    assert standardized.columns.tolist().count("description") == 1
+    assert standardized.loc[0, "description"] == "Job history description"
 
 
 def test_competency_scorer_generates_audit_trail_and_relative_scores():

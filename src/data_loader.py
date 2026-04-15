@@ -51,9 +51,15 @@ def load_and_prepare_dataset(path: str | Path, config: PipelineConfig) -> pd.Dat
 def standardize_columns(df: pd.DataFrame, config: PipelineConfig) -> pd.DataFrame:
     """Rename known aliases to the canonical field names used by the pipeline."""
 
-    rename_map = {
-        source: target for source, target in config.input_column_aliases.items() if source in df.columns
-    }
+    rename_map: dict[str, str] = {}
+    claimed_targets = set(df.columns)
+    for source, target in config.input_column_aliases.items():
+        if source not in df.columns:
+            continue
+        if target in claimed_targets:
+            continue
+        rename_map[source] = target
+        claimed_targets.add(target)
     return df.rename(columns=rename_map)
 
 

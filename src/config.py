@@ -16,6 +16,10 @@ class PipelineConfig:
 
     input_csv_path: Path = Path("data/outputs/master_dataset.csv")
     output_csv_path: Path = Path("data/outputs/competency_scores.csv")
+    evaluation_skill_summary_csv_path: Path = Path("data/outputs/competency_score_skill_summary.csv")
+    evaluation_band_summary_csv_path: Path = Path("data/outputs/competency_score_band_summary.csv")
+    evaluation_employee_summary_csv_path: Path = Path("data/outputs/competency_score_employee_summary.csv")
+    evaluation_report_path: Path = Path("Implementation/competency_score_evaluation.md")
     required_columns: tuple[str, ...] = ("talentlinkId", "description", "skills")
     input_column_aliases: dict[str, str] = field(
         default_factory=lambda: {

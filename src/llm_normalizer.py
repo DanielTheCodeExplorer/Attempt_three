@@ -46,6 +46,25 @@ Generation requirements:
 - If biography and description overlap, deduplicate the evidence.
 - Preserve technical terms exactly where possible."""
 
+SKILL_FOCUSED_REWRITE_PROMPT = """You are a text normalization component for an employee competency scoring system.
+
+Your task is to rewrite a cleaned employee description so it focuses only on evidence relevant to one target skill.
+
+Rules:
+- Use only information explicitly present in the cleaned description.
+- Do not invent experience, tools, tasks, or outcomes.
+- Keep the output in the same compact cleaned-description style as the input.
+- Remove content unrelated to the target skill where possible.
+- If the description contains weak or no explicit evidence for the target skill, return the original cleaned description unchanged.
+- Return valid JSON only.
+
+Required JSON schema:
+{
+  "skill_focused_description": "",
+  "evidence_strength": "high|medium|low"
+}
+"""
+
 
 class SupportsChatCompletions(Protocol):
     """Minimal protocol for an injected OpenAI-like client."""
@@ -80,6 +99,20 @@ class NormalizedBiographyResult:
             "standardized_summary": self.standardized_summary,
             "matched_skills": [skill.__dict__ for skill in self.matched_skills],
             "clean_skill_evidence_text": self.clean_skill_evidence_text,
+        }
+
+
+@dataclass(frozen=True)
+class SkillFocusedRewriteResult:
+    """Validated skill-focused rewrite payload used during scoring."""
+
+    skill_focused_description: str
+    evidence_strength: str
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "skill_focused_description": self.skill_focused_description,
+            "evidence_strength": self.evidence_strength,
         }
 
 
@@ -119,6 +152,42 @@ def normalize_biography_text(
     except Exception as exc:
         LOGGER.warning("llm_normalizer_fallback reason=exception error=%s", exc)
         return conservative_fallback_result(source_text, allowed_skills).to_dict()
+
+
+def rewrite_description_for_skill(
+    cleaned_description: str,
+    skill: str,
+    config: PipelineConfig | None = None,
+    client: SupportsChatCompletions | None = None,
+) -> dict[str, str]:
+    """Rewrite a cleaned description so it focuses on one target skill."""
+
+    config = config or PipelineConfig()
+    normalized_description = str(cleaned_description or "").strip()
+    normalized_skill = str(skill or "").strip()
+    if not normalized_description or not normalized_skill:
+        return SkillFocusedRewriteResult(
+            skill_focused_description=normalized_description,
+            evidence_strength="low",
+        ).to_dict()
+
+    try:
+        active_client = client or build_openai_client()
+        if active_client is None:
+            return fallback_skill_focused_rewrite(normalized_description, normalized_skill).to_dict()
+
+        response = active_client.chat.completions.create(
+            model=config.llm_model_name,
+            temperature=0,
+            response_format={"type": "json_object"},
+            messages=build_skill_focused_messages(normalized_description, normalized_skill),
+        )
+        content = response.choices[0].message.content
+        payload = json.loads(content)
+        return validate_skill_focused_payload(payload, normalized_description).to_dict()
+    except Exception as exc:
+        LOGGER.warning("skill_focused_rewrite_fallback reason=exception error=%s", exc)
+        return fallback_skill_focused_rewrite(normalized_description, normalized_skill).to_dict()
 
 
 def normalize_biography_dataframe(
@@ -177,6 +246,23 @@ def build_messages(
     ]
 
 
+def build_skill_focused_messages(
+    cleaned_description: str,
+    skill: str,
+) -> list[dict[str, str]]:
+    """Build the exact LLM prompt messages for skill-focused description rewriting."""
+
+    user_message = (
+        f"Target skill:\n{skill}\n\n"
+        f"Cleaned description:\n{cleaned_description}\n\n"
+        "Return valid JSON only."
+    )
+    return [
+        {"role": "system", "content": SKILL_FOCUSED_REWRITE_PROMPT},
+        {"role": "user", "content": user_message},
+    ]
+
+
 def build_openai_client() -> SupportsChatCompletions | None:
     """Create an OpenAI client if the SDK and API key are available."""
 
@@ -206,6 +292,22 @@ def build_source_text(biography: str, description: str, position: str) -> str:
     if description:
         parts.append(f"Description: {description}")
     return "\n".join(parts).strip()
+
+
+def validate_skill_focused_payload(
+    payload: dict[str, Any],
+    cleaned_description: str,
+) -> SkillFocusedRewriteResult:
+    """Validate and sanitize the LLM JSON response for a skill-focused rewrite."""
+
+    rewritten_description = str(payload.get("skill_focused_description", "")).strip() or cleaned_description
+    evidence_strength = str(payload.get("evidence_strength", "low")).strip().lower()
+    if evidence_strength not in {"high", "medium", "low"}:
+        evidence_strength = "low"
+    return SkillFocusedRewriteResult(
+        skill_focused_description=rewritten_description,
+        evidence_strength=evidence_strength,
+    )
 
 
 def validate_normalized_payload(
@@ -288,6 +390,18 @@ def conservative_fallback_result(
         standardized_summary=normalized_biography,
         matched_skills=matched_skills,
         clean_skill_evidence_text=clean_text,
+    )
+
+
+def fallback_skill_focused_rewrite(
+    cleaned_description: str,
+    skill: str,
+) -> SkillFocusedRewriteResult:
+    """Return the original cleaned description when no safe skill-focused rewrite is available."""
+
+    return SkillFocusedRewriteResult(
+        skill_focused_description=cleaned_description.strip(),
+        evidence_strength="low",
     )
 
 

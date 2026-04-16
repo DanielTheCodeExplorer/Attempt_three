@@ -3,7 +3,13 @@ import json
 import pandas as pd
 
 from src.config import PipelineConfig
-from src.llm_normalizer import LLM_NORMALIZER_PROMPT, normalize_biography_dataframe, normalize_biography_text
+from src.llm_normalizer import (
+    LLM_NORMALIZER_PROMPT,
+    SKILL_FOCUSED_REWRITE_PROMPT,
+    normalize_biography_dataframe,
+    normalize_biography_text,
+    rewrite_description_for_skill,
+)
 
 
 class FakeResponse:
@@ -43,10 +49,28 @@ class FakeClient:
                 return FakeResponse(json.dumps(payload))
 
 
+class FakeSkillRewriteClient:
+    class chat:
+        class completions:
+            @staticmethod
+            def create(*args, **kwargs):
+                payload = {
+                    "skill_focused_description": "python scripting automation and reporting",
+                    "evidence_strength": "high",
+                }
+                return FakeResponse(json.dumps(payload))
+
+
 def test_llm_prompt_constant_contains_required_schema():
     assert "Required JSON schema" in LLM_NORMALIZER_PROMPT
     assert "matched_skills" in LLM_NORMALIZER_PROMPT
     assert "clean_skill_evidence_text" in LLM_NORMALIZER_PROMPT
+
+
+def test_skill_focused_prompt_constant_contains_required_schema():
+    assert "Target skill" not in SKILL_FOCUSED_REWRITE_PROMPT
+    assert "skill_focused_description" in SKILL_FOCUSED_REWRITE_PROMPT
+    assert "evidence_strength" in SKILL_FOCUSED_REWRITE_PROMPT
 
 
 def test_normalize_biography_text_filters_to_allowed_skills():
@@ -83,3 +107,15 @@ def test_normalize_biography_dataframe_creates_scoring_description():
     assert "clean_skill_evidence_text" in normalized.columns
     assert "description" in normalized.columns
     assert normalized.loc[0, "description"] == normalized.loc[0, "clean_skill_evidence_text"]
+
+
+def test_rewrite_description_for_skill_returns_skill_focused_text():
+    payload = rewrite_description_for_skill(
+        cleaned_description="planned office events python scripting automation and reporting",
+        skill="Python",
+        config=PipelineConfig(),
+        client=FakeSkillRewriteClient(),
+    )
+
+    assert payload["skill_focused_description"] == "python scripting automation and reporting"
+    assert payload["evidence_strength"] == "high"

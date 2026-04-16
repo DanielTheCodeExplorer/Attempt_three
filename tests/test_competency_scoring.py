@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 
 import pandas as pd
 import pytest
@@ -12,6 +13,38 @@ from src.data_loader import (
     validate_required_columns,
 )
 from src.text_preprocessing import preprocess_text, split_text_into_chunks
+
+
+class FakeSkillRewriteClient:
+    class chat:
+        class completions:
+            @staticmethod
+            def create(*args, **kwargs):
+                user_message = kwargs["messages"][1]["content"].lower()
+                if "target skill:\npython" in user_message:
+                    payload = {
+                        "skill_focused_description": "python scripting automation and data analysis for reporting",
+                        "evidence_strength": "high",
+                    }
+                else:
+                    payload = {
+                        "skill_focused_description": "planned catering budgets for office events",
+                        "evidence_strength": "low",
+                    }
+                response = type(
+                    "Response",
+                    (),
+                    {
+                        "choices": [
+                            type(
+                                "Choice",
+                                (),
+                                {"message": type("Message", (), {"content": json.dumps(payload)})()},
+                            )()
+                        ]
+                    },
+                )()
+                return response
 
 
 def test_validate_required_columns_rejects_missing_fields():
@@ -192,3 +225,31 @@ def test_semantic_similarity_is_calibrated_before_hybrid_scoring():
 
     assert scorer._calibrate_similarity(0.05) == 0.5
     assert scorer._calibrate_similarity(0.20) == 1.0
+
+
+def test_competency_scorer_can_use_skill_focused_rewrite_per_skill():
+    config = PipelineConfig(
+        tfidf_max_features=None,
+        skill_references={
+            "python": "Uses Python for scripting automation and data analysis.",
+            "sql": "Uses SQL to query tables and write reporting joins.",
+        },
+    )
+    df = pd.DataFrame(
+        [
+            {
+                "talentlinkId": "1001",
+                "description": "Planned catering budgets for office events. Python scripting automation and data analysis for reporting.",
+                "skills": ["Python", "SQL"],
+            }
+        ]
+    )
+
+    results = CompetencyScorer(config, llm_client=FakeSkillRewriteClient()).score_dataframe(df)
+
+    python_row = results.loc[results["skill"] == "Python"].iloc[0]
+    sql_row = results.loc[results["skill"] == "SQL"].iloc[0]
+
+    assert python_row["cleaned_description"] == "python scripting automation and data analysis for reporting"
+    assert sql_row["cleaned_description"] == "planned catering budgets for office events"
+    assert python_row["similarity_score"] > sql_row["similarity_score"]

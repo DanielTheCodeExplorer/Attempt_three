@@ -5,6 +5,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from src.config import PipelineConfig, ScoreBand
+from src.llm_normalizer import SupportsChatCompletions, rewrite_description_for_skill
 from src.logging_utils import get_logger
 from src.skill_references import get_skill_aliases, get_skill_reference
 from src.text_preprocessing import preprocess_text, split_text_into_chunks
@@ -33,8 +34,10 @@ class ScoreRecord:
 class CompetencyScorer:
     """Scores listed skills against employee description evidence."""
 
-    def __init__(self, config: PipelineConfig) -> None:
+    def __init__(self, config: PipelineConfig, llm_client: SupportsChatCompletions | None = None) -> None:
         self.config = config
+        self.llm_client = llm_client
+        self._skill_rewrite_cache: dict[tuple[str, str], str] = {}
         self.vectorizer = TfidfVectorizer(
             max_features=config.tfidf_max_features,
             ngram_range=config.tfidf_ngram_range,
@@ -47,39 +50,39 @@ class CompetencyScorer:
 
         self._validate_input_frame(df)
         working = df.copy()
-        working["cleaned_description"] = working["description"].apply(preprocess_text)
-        working["description_chunks"] = working["description"].apply(split_text_into_chunks)
+        working["base_cleaned_description"] = working["description"].apply(preprocess_text)
 
         reference_lookup = self._build_reference_lookup(working["skills"])
-        self._fit_vectorizer(working["description_chunks"], reference_lookup)
+        scoring_rows = self._build_scoring_rows(working, reference_lookup)
+        self._fit_vectorizer([row["description_chunks"] for row in scoring_rows], reference_lookup)
         reference_vectors = self._build_reference_vectors(reference_lookup)
 
         records: list[ScoreRecord] = []
-        for row_index, row in working.reset_index(drop=True).iterrows():
-            for skill in row["skills"]:
-                reference_text = reference_lookup[skill]
-                chunk_similarity, evidence_excerpt = self._best_chunk_similarity(
-                    row["description_chunks"], reference_vectors[skill]
+        for row in scoring_rows:
+            skill = row["skill"]
+            reference_text = reference_lookup[skill]
+            chunk_similarity, evidence_excerpt = self._best_chunk_similarity(
+                row["description_chunks"], reference_vectors[skill]
+            )
+            match_signal = self._compute_match_signal(row["cleaned_description"], skill)
+            semantic_evidence_score = self._calibrate_similarity(chunk_similarity)
+            hybrid_score = self._combine_signals(match_signal, semantic_evidence_score)
+            competency_score = self._to_competency_score(hybrid_score)
+            records.append(
+                ScoreRecord(
+                    talentlinkId=row["talentlinkId"],
+                    skill=skill,
+                    cleaned_description=row["cleaned_description"],
+                    reference_text=reference_text,
+                    match_signal_score=round(match_signal, 6),
+                    similarity_score=round(chunk_similarity, 6),
+                    semantic_evidence_score=round(semantic_evidence_score, 6),
+                    hybrid_score=round(hybrid_score, 6),
+                    competency_score=competency_score,
+                    score_band=self._assign_score_band(competency_score),
+                    evidence_excerpt=evidence_excerpt,
                 )
-                match_signal = self._compute_match_signal(row["cleaned_description"], skill)
-                semantic_evidence_score = self._calibrate_similarity(chunk_similarity)
-                hybrid_score = self._combine_signals(match_signal, semantic_evidence_score)
-                competency_score = self._to_competency_score(hybrid_score)
-                records.append(
-                    ScoreRecord(
-                        talentlinkId=row["talentlinkId"],
-                        skill=skill,
-                        cleaned_description=row["cleaned_description"],
-                        reference_text=reference_text,
-                        match_signal_score=round(match_signal, 6),
-                        similarity_score=round(chunk_similarity, 6),
-                        semantic_evidence_score=round(semantic_evidence_score, 6),
-                        hybrid_score=round(hybrid_score, 6),
-                        competency_score=competency_score,
-                        score_band=self._assign_score_band(competency_score),
-                        evidence_excerpt=evidence_excerpt,
-                    )
-                )
+            )
 
         LOGGER.info("score_dataframe_complete employees=%s scores=%s", len(working), len(records))
         return pd.DataFrame([record.__dict__ for record in records])
@@ -98,7 +101,28 @@ class CompetencyScorer:
                     unique_skills[skill] = get_skill_reference(skill, self.config)
         return unique_skills
 
-    def _fit_vectorizer(self, description_chunks: pd.Series, reference_lookup: dict[str, str]) -> None:
+    def _build_scoring_rows(
+        self,
+        working: pd.DataFrame,
+        reference_lookup: dict[str, str],
+    ) -> list[dict[str, str | list[str]]]:
+        scoring_rows: list[dict[str, str | list[str]]] = []
+        for _, row in working.reset_index(drop=True).iterrows():
+            for skill in row["skills"]:
+                cleaned_description = self._rewrite_for_skill(row["base_cleaned_description"], skill)
+                description_chunks = split_text_into_chunks(cleaned_description) or [cleaned_description]
+                scoring_rows.append(
+                    {
+                        "talentlinkId": row["talentlinkId"],
+                        "skill": skill,
+                        "cleaned_description": cleaned_description,
+                        "description_chunks": description_chunks,
+                        "reference_text": reference_lookup[skill],
+                    }
+                )
+        return scoring_rows
+
+    def _fit_vectorizer(self, description_chunks: list[list[str]], reference_lookup: dict[str, str]) -> None:
         corpus = []
         for chunks in description_chunks:
             corpus.extend(preprocess_text(chunk) for chunk in chunks if preprocess_text(chunk))
@@ -160,3 +184,21 @@ class CompetencyScorer:
             if competency_score >= band.minimum_score:
                 selected_band = band
         return selected_band.label
+
+    def _rewrite_for_skill(self, cleaned_description: str, skill: str) -> str:
+        cache_key = (cleaned_description, skill)
+        if cache_key in self._skill_rewrite_cache:
+            return self._skill_rewrite_cache[cache_key]
+
+        rewritten_description = cleaned_description
+        if self.config.skill_focused_rewrite_enabled:
+            payload = rewrite_description_for_skill(
+                cleaned_description=cleaned_description,
+                skill=skill,
+                config=self.config,
+                client=self.llm_client,
+            )
+            rewritten_description = preprocess_text(payload["skill_focused_description"]) or cleaned_description
+
+        self._skill_rewrite_cache[cache_key] = rewritten_description
+        return rewritten_description

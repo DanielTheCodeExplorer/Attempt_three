@@ -5,3 +5,4 @@ openpyxl
 polars
 scikit-learn
 pytest
+openai

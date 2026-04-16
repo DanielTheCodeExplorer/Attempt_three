@@ -3,7 +3,9 @@ from src.competency_scoring import CompetencyScorer
 from src.config import DEFAULT_CONFIG
 from src.data_loader import load_and_prepare_dataset
 from src.evaluation import summarise_scores
+from src.llm_normalizer import normalize_biography_dataframe
 from src.logging_utils import configure_logging, get_logger
+import pandas as pd
 
 
 LOGGER = get_logger(__name__)
@@ -17,7 +19,11 @@ def main() -> None:
         input_csv_path=DEFAULT_CONFIG.biography_input_csv_path,
         output_csv_path=DEFAULT_CONFIG.biography_dataset_csv_path,
     )
-    dataset = load_and_prepare_dataset(DEFAULT_CONFIG.biography_dataset_csv_path, DEFAULT_CONFIG)
+    biography_df = pd.read_csv(DEFAULT_CONFIG.biography_dataset_csv_path)
+    normalized_biography_df = normalize_biography_dataframe(biography_df, config=DEFAULT_CONFIG)
+    normalized_biography_df.to_csv(DEFAULT_CONFIG.biography_normalized_dataset_csv_path, index=False)
+
+    dataset = load_and_prepare_dataset(DEFAULT_CONFIG.biography_normalized_dataset_csv_path, DEFAULT_CONFIG)
     scorer = CompetencyScorer(DEFAULT_CONFIG)
     results = scorer.score_dataframe(dataset)
 
@@ -29,7 +35,7 @@ def main() -> None:
 
     LOGGER.info(
         "biography_pipeline_complete dataset=%s scores=%s evaluation=%s",
-        DEFAULT_CONFIG.biography_dataset_csv_path,
+        DEFAULT_CONFIG.biography_normalized_dataset_csv_path,
         DEFAULT_CONFIG.biography_score_output_csv_path,
         DEFAULT_CONFIG.biography_evaluation_csv_path,
     )

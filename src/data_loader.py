@@ -74,12 +74,11 @@ def validate_required_columns(df: pd.DataFrame, config: PipelineConfig) -> None:
 def parse_skills(value: object) -> list[str]:
     """Parse skill data from a Python-list string, list object, or comma-separated text."""
 
-    if value is None or pd.isna(value):
-        return []
-
     parsed: list[object]
     if isinstance(value, list):
         parsed = value
+    elif value is None or pd.isna(value):
+        return []
     elif isinstance(value, str):
         text = value.strip()
         if not text:

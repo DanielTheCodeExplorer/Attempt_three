@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -18,6 +19,7 @@ class PipelineConfig:
     output_csv_path: Path = Path("data/outputs/competency_scores.csv")
     biography_input_csv_path: Path = Path("data/outputs/master_dataset.csv")
     biography_dataset_csv_path: Path = Path("data/outputs/biography_dataset.csv")
+    biography_normalized_dataset_csv_path: Path = Path("data/outputs/biography_normalized_dataset.csv")
     biography_score_output_csv_path: Path = Path("data/outputs/biography_competency_scores.csv")
     biography_evaluation_csv_path: Path = Path("data/outputs/biography_competency_evaluation.csv")
     evaluation_skill_summary_csv_path: Path = Path("data/outputs/competency_score_skill_summary.csv")
@@ -29,6 +31,7 @@ class PipelineConfig:
         default_factory=lambda: {
             "TalentLink ID": "talentlinkId",
             "Description": "description",
+            "clean_skill_evidence_text": "description",
             "skills": "skills",
             "Biography": "description",
             "biography": "description",
@@ -41,6 +44,7 @@ class PipelineConfig:
     exact_match_weight: float = 0.6
     semantic_similarity_weight: float = 0.4
     semantic_similarity_strong_threshold: float = 0.12
+    llm_model_name: str = field(default_factory=lambda: os.getenv("OPENAI_MODEL_NAME", "gpt-4o-mini"))
     score_bands: tuple[ScoreBand, ...] = (
         ScoreBand(label="low", minimum_score=0.0),
         ScoreBand(label="medium", minimum_score=25.0),

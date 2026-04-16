@@ -15,14 +15,15 @@ LOGGER = get_logger(__name__)
 
 LLM_NORMALIZER_PROMPT = """You are an information extraction component for an employee competency scoring system.
 
-Your task is to read a raw employee biography and convert it into structured skill evidence for downstream scoring.
+Your task is to read employee biography and description text and convert them into structured skill evidence for downstream scoring.
 
 Rules:
-- Use only information explicitly present in the biography.
+- Use only information explicitly present in the source text.
 - Do not invent or assume skills.
-- If a skill list is provided, only return skills from that list.
+- If an allowed skill list is provided, only return skills from that list.
 - Prefer precision over recall.
 - Return valid JSON only.
+- If evidence is weak, return fewer skills rather than guessing.
 
 Required JSON schema:
 {
@@ -39,10 +40,11 @@ Required JSON schema:
 }
 
 Generation requirements:
-- `standardized_summary` should rewrite the biography into short, standardised professional wording.
-- `matched_skills` should contain only explicitly supported skills.
-- `clean_skill_evidence_text` should be a compact paragraph of standardised skill-evidence statements for similarity scoring.
-- If evidence is weak or absent, return fewer skills."""
+- `standardized_summary` should rewrite the source text into short, standardised professional wording.
+- `matched_skills` should contain only skills explicitly supported by the source text.
+- `clean_skill_evidence_text` should be a compact paragraph of standardised skill-evidence statements suitable for TF-IDF or similarity scoring.
+- If biography and description overlap, deduplicate the evidence.
+- Preserve technical terms exactly where possible."""
 
 
 class SupportsChatCompletions(Protocol):
@@ -82,36 +84,41 @@ class NormalizedBiographyResult:
 
 
 def normalize_biography_text(
-    raw_biography_text: str,
+    biography_text: str,
+    description_text: str,
+    position: str | None = None,
     allowed_skills: list[str] | None = None,
     config: PipelineConfig | None = None,
     client: SupportsChatCompletions | None = None,
 ) -> dict[str, Any]:
-    """Normalize biography text into structured skill evidence using an LLM when available."""
+    """Normalize biography and description text into structured skill evidence using an LLM."""
 
     config = config or PipelineConfig()
-    biography = str(raw_biography_text or "").strip()
-    if not biography:
+    biography = str(biography_text or "").strip()
+    description = str(description_text or "").strip()
+    role = str(position or "").strip()
+    if not biography and not description:
         return empty_normalization_result().to_dict()
+    source_text = build_source_text(biography, description, role)
 
     try:
         active_client = client or build_openai_client()
         if active_client is None:
             LOGGER.warning("llm_normalizer_fallback reason=no_client")
-            return conservative_fallback_result(biography, allowed_skills).to_dict()
+            return conservative_fallback_result(source_text, allowed_skills).to_dict()
 
         response = active_client.chat.completions.create(
             model=config.llm_model_name,
             temperature=0,
             response_format={"type": "json_object"},
-            messages=build_messages(biography, allowed_skills),
+            messages=build_messages(biography, description, role, allowed_skills),
         )
         content = response.choices[0].message.content
         payload = json.loads(content)
-        return validate_normalized_payload(payload, biography, allowed_skills).to_dict()
+        return validate_normalized_payload(payload, source_text, allowed_skills).to_dict()
     except Exception as exc:
         LOGGER.warning("llm_normalizer_fallback reason=exception error=%s", exc)
-        return conservative_fallback_result(biography, allowed_skills).to_dict()
+        return conservative_fallback_result(source_text, allowed_skills).to_dict()
 
 
 def normalize_biography_dataframe(
@@ -125,7 +132,9 @@ def normalize_biography_dataframe(
     working = df.copy()
     normalized_payloads = [
         normalize_biography_text(
-            raw_biography_text=row.get("biography", ""),
+            biography_text=row.get("biography", ""),
+            description_text=row.get("description", ""),
+            position=row.get("position", ""),
             allowed_skills=parse_skills(row.get("skills", None)),
             config=config,
             client=client,
@@ -138,17 +147,27 @@ def normalize_biography_dataframe(
     working["clean_skill_evidence_text"] = [payload["clean_skill_evidence_text"] for payload in normalized_payloads]
     working["description"] = working["clean_skill_evidence_text"].where(
         working["clean_skill_evidence_text"].astype(str).str.strip().ne(""),
-        working["biography"],
+        working["description"].where(
+            working["description"].astype(str).str.strip().ne(""),
+            working["biography"],
+        ),
     )
     return working
 
 
-def build_messages(raw_biography_text: str, allowed_skills: list[str] | None) -> list[dict[str, str]]:
+def build_messages(
+    biography_text: str,
+    description_text: str,
+    position: str | None,
+    allowed_skills: list[str] | None,
+) -> list[dict[str, str]]:
     """Build the exact LLM prompt messages for normalization."""
 
     skill_clause = json.dumps(allowed_skills or [], ensure_ascii=True)
     user_message = (
-        f"Raw biography:\n{raw_biography_text}\n\n"
+        f"Biography text:\n{biography_text}\n\n"
+        f"Description text:\n{description_text}\n\n"
+        f"Position:\n{position or ''}\n\n"
         f"Allowed skills:\n{skill_clause}\n\n"
         "Return valid JSON only."
     )
@@ -171,7 +190,22 @@ def build_openai_client() -> SupportsChatCompletions | None:
         LOGGER.warning("llm_normalizer_missing_dependency dependency=openai")
         return None
 
+    if config_base_url := os.getenv("OPENAI_BASE_URL"):
+        return OpenAI(api_key=api_key, base_url=config_base_url)
     return OpenAI(api_key=api_key)
+
+
+def build_source_text(biography: str, description: str, position: str) -> str:
+    """Combine biography, description, and position into one source block."""
+
+    parts = []
+    if position:
+        parts.append(f"Position: {position}")
+    if biography:
+        parts.append(f"Biography: {biography}")
+    if description:
+        parts.append(f"Description: {description}")
+    return "\n".join(parts).strip()
 
 
 def validate_normalized_payload(

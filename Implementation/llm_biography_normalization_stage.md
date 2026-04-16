@@ -3,7 +3,7 @@
 ## Purpose
 This note explains the new LLM-based normalization stage added before competency scoring in the biography pipeline.
 
-The aim of this stage is to take raw biography text and rewrite it into a more standardised skill-evidence format so the downstream scoring model receives cleaner and more comparable input.
+The aim of this stage is to take raw biography and description text, with optional position context, and rewrite them into a more standardised skill-evidence format so the downstream scoring model receives cleaner and more comparable input.
 
 ## New Module
 The new module is:
@@ -37,7 +37,7 @@ The exact prompt is stored in `src/llm_normalizer.py` as `LLM_NORMALIZER_PROMPT`
 
 It instructs the model to:
 
-- use only explicit information from the biography,
+- use only explicit information from the source text,
 - avoid inventing skills,
 - restrict skills to the allowed list when provided,
 - prefer precision over recall,
@@ -51,7 +51,7 @@ The integration point is the biography pipeline in:
 The updated sequence is now:
 
 1. create the base biography dataset,
-2. run LLM normalization over each biography,
+2. run LLM normalization over each biography, description, and optional position,
 3. save a normalized biography dataset,
 4. score using `clean_skill_evidence_text` through the normal pipeline,
 5. write biography-based score and evaluation outputs.
@@ -62,7 +62,7 @@ The loader already expects a `description` field. The normalization stage now cr
 - `clean_skill_evidence_text`
 - `description`
 
-The `description` field is set from `clean_skill_evidence_text` when available, so the scorer uses normalized biography evidence instead of the raw biography text.
+The `description` field is set from `clean_skill_evidence_text` when available, so the scorer uses normalized evidence text instead of the raw biography or raw description text.
 
 ## Configuration
 The model name is configured through the environment variable:
@@ -70,6 +70,10 @@ The model name is configured through the environment variable:
 - `OPENAI_MODEL_NAME`
 
 This is read into `PipelineConfig.llm_model_name`.
+
+The optional base URL is configured through:
+
+- `OPENAI_BASE_URL`
 
 The OpenAI API key is expected through:
 
@@ -86,7 +90,7 @@ The normalizer includes:
 The fallback is intentionally strict:
 
 - it returns fewer skills rather than more,
-- it only keeps explicit direct skill matches found in the source biography.
+- it only keeps explicit direct skill matches found in the source text.
 
 ## Files Changed
 - `src/config.py`
@@ -97,9 +101,17 @@ The fallback is intentionally strict:
 - `tests/test_llm_normalizer.py`
 
 ## Example Input
-Raw biography:
+Biography:
 
-`Built Python automation for reporting and queried data using SQL.`
+`Built Python automation for reporting.`
+
+Description:
+
+`Queried data using SQL for reporting.`
+
+Position:
+
+`Consultant`
 
 Allowed skills:
 
@@ -133,7 +145,7 @@ The earlier scoring pipeline used raw biography or description text directly. Th
 
 The LLM normalization stage improves this by:
 
-- rewriting biographies into standardised evidence wording,
+- rewriting source text into standardised evidence wording,
 - extracting only supported skill evidence,
 - creating a cleaner text field for downstream similarity scoring,
 - preserving explainability through structured matched-skill evidence.

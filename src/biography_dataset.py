@@ -19,7 +19,7 @@ def create_biography_dataset(input_csv_path: str | Path, output_csv_path: str | 
     LOGGER.info("create_biography_dataset_start input=%s output=%s", input_path, output_path)
 
     df = pd.read_csv(input_path)
-    required_columns = ["TalentLink ID", "skills", "Biography"]
+    required_columns = ["TalentLink ID", "skills", "Biography", "Description", "Position"]
     missing = [column for column in required_columns if column not in df.columns]
     if missing:
         raise ValueError(f"Biography dataset source is missing required columns: {missing}")
@@ -32,12 +32,15 @@ def create_biography_dataset(input_csv_path: str | Path, output_csv_path: str | 
     selected["TalentLink ID"] = selected["TalentLink ID"].astype("string").str.strip()
     selected["skills"] = selected["skills"].apply(parse_skills)
     selected["biography"] = selected["Biography"].apply(parse_biography)
+    selected["description"] = selected["Description"].apply(parse_biography)
+    selected["position"] = selected["Position"].apply(parse_biography)
 
     selected = selected[
         selected["TalentLink ID"].notna()
         & selected["TalentLink ID"].ne("")
         & selected["skills"].map(bool)
         & selected["biography"].ne("")
+        & selected["description"].ne("")
     ].copy()
 
     grouped = (
@@ -45,12 +48,14 @@ def create_biography_dataset(input_csv_path: str | Path, output_csv_path: str | 
         .agg(
             skills=("skills", combine_skill_lists),
             biography=("biography", combine_biographies),
+            description=("description", combine_biographies),
+            position=("position", combine_biographies),
         )
         .reset_index()
         .rename(columns={"TalentLink ID": "talentlinkId"})
     )
 
-    grouped = grouped[["talentlinkId", "skills", "biography"]]
+    grouped = grouped[["talentlinkId", "skills", "biography", "description", "position"]]
     output_path.parent.mkdir(parents=True, exist_ok=True)
     grouped.to_csv(output_path, index=False)
     LOGGER.info("create_biography_dataset_complete rows=%s output=%s", len(grouped), output_path)

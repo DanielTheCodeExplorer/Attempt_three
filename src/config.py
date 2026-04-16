@@ -45,6 +45,7 @@ class PipelineConfig:
     semantic_similarity_weight: float = 0.4
     semantic_similarity_strong_threshold: float = 0.12
     llm_model_name: str = field(default_factory=lambda: os.getenv("OPENAI_MODEL_NAME", "gpt-4o-mini"))
+    llm_base_url: str | None = field(default_factory=lambda: os.getenv("OPENAI_BASE_URL"))
     score_bands: tuple[ScoreBand, ...] = (
         ScoreBand(label="low", minimum_score=0.0),
         ScoreBand(label="medium", minimum_score=25.0),

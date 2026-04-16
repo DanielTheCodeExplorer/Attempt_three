@@ -20,21 +20,29 @@ def test_create_biography_dataset_filters_na_and_groups_rows(tmp_path: Path):
                 "TalentLink ID": "1001",
                 "skills": "['Python', 'SQL']",
                 "Biography": "['Experienced in Python automation.']",
+                "Description": "['Built SQL reports.']",
+                "Position": "['Consultant']",
             },
             {
                 "TalentLink ID": "1001",
                 "skills": "['SQL', 'Python']",
                 "Biography": "['Experienced in Python automation.']",
+                "Description": "['Built SQL reports.']",
+                "Position": "['Consultant']",
             },
             {
                 "TalentLink ID": "1002",
                 "skills": None,
                 "Biography": "['Missing skill row.']",
+                "Description": "['Missing skill row.']",
+                "Position": "['Analyst']",
             },
             {
                 "TalentLink ID": "1003",
                 "skills": "['Power BI']",
                 "Biography": None,
+                "Description": "['Dashboard work.']",
+                "Position": "['Analyst']",
             },
         ]
     )
@@ -45,11 +53,13 @@ def test_create_biography_dataset_filters_na_and_groups_rows(tmp_path: Path):
     result = create_biography_dataset(input_path, output_path)
 
     assert output_path.exists()
-    assert list(result.columns) == ["talentlinkId", "skills", "biography"]
+    assert list(result.columns) == ["talentlinkId", "skills", "biography", "description", "position"]
     assert result.shape[0] == 1
     assert result.loc[0, "talentlinkId"] == "1001"
     assert result.loc[0, "skills"] == ["Python", "SQL"]
     assert result.loc[0, "biography"] == "Experienced in Python automation."
+    assert result.loc[0, "description"] == "Built SQL reports."
+    assert result.loc[0, "position"] == "Consultant"
 
 
 def test_biography_dataset_loads_into_scoring_schema(tmp_path: Path):
@@ -59,6 +69,8 @@ def test_biography_dataset_loads_into_scoring_schema(tmp_path: Path):
                 "talentlinkId": "1001",
                 "skills": "['Python', 'SQL']",
                 "biography": "Experienced in Python automation and SQL reporting.",
+                "description": "Built SQL reports for governance dashboards.",
+                "position": "Consultant",
             }
         ]
     )
@@ -68,5 +80,5 @@ def test_biography_dataset_loads_into_scoring_schema(tmp_path: Path):
     prepared = load_and_prepare_dataset(csv_path, PipelineConfig())
 
     assert list(prepared.columns) == ["talentlinkId", "description", "skills"]
-    assert prepared.loc[0, "description"] == "Experienced in Python automation and SQL reporting."
+    assert prepared.loc[0, "description"] == "Built SQL reports for governance dashboards."
     assert prepared.loc[0, "skills"] == ["Python", "SQL"]

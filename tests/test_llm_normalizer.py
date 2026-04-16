@@ -51,7 +51,9 @@ def test_llm_prompt_constant_contains_required_schema():
 
 def test_normalize_biography_text_filters_to_allowed_skills():
     result = normalize_biography_text(
-        raw_biography_text="Built Python automation for reporting and queried data using SQL.",
+        biography_text="Built Python automation for reporting.",
+        description_text="Queried data using SQL for reporting.",
+        position="Consultant",
         allowed_skills=["Python", "SQL"],
         config=PipelineConfig(),
         client=FakeClient(),
@@ -69,7 +71,9 @@ def test_normalize_biography_dataframe_creates_scoring_description():
             {
                 "talentlinkId": "1001",
                 "skills": ["Python", "SQL"],
-                "biography": "Built Python automation for reporting and queried data using SQL.",
+                "biography": "Built Python automation for reporting.",
+                "description": "Queried data using SQL for reporting.",
+                "position": "Consultant",
             }
         ]
     )

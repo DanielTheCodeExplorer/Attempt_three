@@ -1,2 +1,2 @@
 data_source,score_rows,employee_count,skill_count,average_similarity,average_competency_score,low_band_ratio,medium_band_ratio,high_band_ratio
-biography,656,71,10,0.0238,11.08,0.9345,0.0381,0.0274
+job_history,958,105,10,0.0111,3.72,1.0,0.0,0.0

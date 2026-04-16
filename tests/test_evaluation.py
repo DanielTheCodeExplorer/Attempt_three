@@ -1,6 +1,7 @@
 import pandas as pd
 
 from src.evaluation import (
+    build_pipeline_evaluation_frame,
     build_overall_metrics,
     render_evaluation_report,
     summarise_employee_scores,
@@ -54,6 +55,19 @@ def test_build_overall_metrics_and_report():
 
     assert metrics["score_rows"] == 3
     assert metrics["employee_count"] == 2
+    assert metrics["low_band_ratio"] == round(1 / 3, 4)
+    assert metrics["medium_band_ratio"] == round(1 / 3, 4)
+    assert metrics["high_band_ratio"] == round(1 / 3, 4)
     assert "Competency Score Evaluation" in report
     assert "Score Band Distribution" in report
     assert "Python" in report
+
+
+def test_build_pipeline_evaluation_frame_returns_one_comparable_row():
+    evaluation_df = build_pipeline_evaluation_frame(build_results_df(), data_source="job_history")
+
+    assert len(evaluation_df) == 1
+    row = evaluation_df.iloc[0]
+    assert row["data_source"] == "job_history"
+    assert row["score_rows"] == 3
+    assert row["employee_count"] == 2

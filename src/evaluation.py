@@ -72,17 +72,29 @@ def build_overall_metrics(results_df: pd.DataFrame) -> dict[str, float | int]:
             "skill_count": 0,
             "average_similarity": 0.0,
             "average_competency_score": 0.0,
+            "low_band_ratio": 0.0,
+            "medium_band_ratio": 0.0,
             "high_band_ratio": 0.0,
         }
 
+    band_ratios = results_df["score_band"].value_counts(normalize=True).to_dict()
     return {
         "score_rows": int(len(results_df)),
         "employee_count": int(results_df["talentlinkId"].nunique()),
         "skill_count": int(results_df["skill"].nunique()),
         "average_similarity": round(float(results_df["similarity_score"].mean()), 4),
         "average_competency_score": round(float(results_df["competency_score"].mean()), 2),
+        "low_band_ratio": round(float(band_ratios.get("low", 0.0)), 4),
+        "medium_band_ratio": round(float(band_ratios.get("medium", 0.0)), 4),
         "high_band_ratio": round(float((results_df["score_band"] == "high").mean()), 4),
     }
+
+
+def build_pipeline_evaluation_frame(results_df: pd.DataFrame, data_source: str) -> pd.DataFrame:
+    """Create a one-row evaluation frame so pipeline outputs are easy to compare."""
+
+    metrics = build_overall_metrics(results_df)
+    return pd.DataFrame([{"data_source": data_source, **metrics}])
 
 
 def render_evaluation_report(

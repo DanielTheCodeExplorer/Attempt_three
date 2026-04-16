@@ -17,6 +17,8 @@ class PipelineConfig:
 
     input_csv_path: Path = Path("data/outputs/master_dataset.csv")
     output_csv_path: Path = Path("data/outputs/competency_scores.csv")
+    job_history_score_output_csv_path: Path = Path("data/outputs/job_history_competency_scores.csv")
+    job_history_evaluation_csv_path: Path = Path("data/outputs/job_history_competency_evaluation.csv")
     biography_input_csv_path: Path = Path("data/outputs/master_dataset.csv")
     biography_dataset_csv_path: Path = Path("data/outputs/biography_dataset.csv")
     biography_normalized_dataset_csv_path: Path = Path("data/outputs/biography_normalized_dataset.csv")

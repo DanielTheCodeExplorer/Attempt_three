@@ -1,10 +1,11 @@
 from pathlib import Path
 import json
 
+import numpy as np
 import pandas as pd
 import pytest
 
-from src.competency_scoring import CompetencyScorer
+from src.competency_scoring import CompetencyScorer, compute_tfidf_scores
 from src.config import PipelineConfig, ScoreBand
 from src.data_loader import (
     load_and_prepare_dataset,
@@ -15,36 +16,36 @@ from src.data_loader import (
 from src.text_preprocessing import preprocess_text, split_text_into_chunks
 
 
-class FakeSkillRewriteClient:
-    class chat:
-        class completions:
-            @staticmethod
-            def create(*args, **kwargs):
-                user_message = kwargs["messages"][1]["content"].lower()
-                if "target skill:\npython" in user_message:
-                    payload = {
-                        "skill_focused_description": "python scripting automation and data analysis for reporting",
-                        "evidence_strength": "high",
-                    }
-                else:
-                    payload = {
-                        "skill_focused_description": "planned catering budgets for office events",
-                        "evidence_strength": "low",
-                    }
-                response = type(
-                    "Response",
-                    (),
-                    {
-                        "choices": [
-                            type(
-                                "Choice",
-                                (),
-                                {"message": type("Message", (), {"content": json.dumps(payload)})()},
-                            )()
-                        ]
-                    },
-                )()
-                return response
+class FakeSemanticEmbedder:
+    """Keyword-cluster embedder used to test the fallback path deterministically."""
+
+    def encode(self, texts: list[str]) -> np.ndarray:
+        vectors = []
+        for text in texts:
+            lowered = text.lower()
+            vector = np.array(
+                [
+                    self._count(lowered, {"python", "code", "coding", "script", "scripts", "automation", "automate"}),
+                    self._count(lowered, {"sql", "query", "queries", "join", "joins", "database"}),
+                    self._count(lowered, {"risk", "control", "controls", "assurance", "mitigation", "framework"}),
+                    self._count(lowered, {"stakeholder", "stakeholders", "client", "communication", "requirements"}),
+                    self._count(lowered, {"power bi", "dashboard", "dashboards", "dax", "visual"}),
+                    self._count(lowered, {"programme", "program", "delivery", "milestone", "workstream"}),
+                    self._count(lowered, {"regulatory", "submission", "submissions", "reporting", "compliance"}),
+                    self._count(lowered, {"analysis", "analytics", "insight", "dataset", "datasets", "trend"}),
+                    self._count(lowered, {"governance", "quality", "stewardship", "standards"}),
+                    self._count(lowered, {"etl", "pipeline", "integration", "transform", "load", "ingestion"}),
+                ],
+                dtype=float,
+            )
+            if not vector.any():
+                vector[0] = 0.1
+            vectors.append(vector)
+        return np.vstack(vectors)
+
+    @staticmethod
+    def _count(text: str, terms: set[str]) -> float:
+        return float(sum(term in text for term in terms))
 
 
 def test_validate_required_columns_rejects_missing_fields():
@@ -125,131 +126,133 @@ def test_standardize_columns_does_not_create_duplicate_description_columns():
     assert standardized.loc[0, "description"] == "Job history description"
 
 
-def test_competency_scorer_generates_audit_trail_and_relative_scores():
+def test_compute_tfidf_scores_ranks_sql_above_unrelated_skills():
+    profiles = {
+        "SQL": "Uses SQL to query databases, join tables, and support reporting.",
+        "Python": "Uses Python for scripting and automation.",
+        "Stakeholder Management": "Manages stakeholders and gathers requirements.",
+    }
+
+    scores = compute_tfidf_scores(
+        "Built SQL queries, created joins, and supported reporting reconciliations.",
+        profiles,
+        PipelineConfig(),
+    )
+
+    assert scores["SQL"] > scores["Python"]
+    assert scores["SQL"] > scores["Stakeholder Management"]
+
+
+def test_competency_scorer_matches_aliases_and_scores_detected_skills():
     config = PipelineConfig(
-        tfidf_max_features=None,
         score_bands=(
             ScoreBand(label="low", minimum_score=0.0),
-            ScoreBand(label="medium", minimum_score=35.0),
-            ScoreBand(label="high", minimum_score=65.0),
-        ),
-        exact_match_weight=0.6,
-        semantic_similarity_weight=0.4,
-        skill_references={
-            "python": "Uses Python for scripting automation and data analysis.",
-            "sql": "Uses SQL to query tables and write reporting joins.",
-        },
-        skill_aliases={
-            "python": ("pandas",),
-            "sql": ("relational databases", "joins"),
-        },
+            ScoreBand(label="medium", minimum_score=25.0),
+            ScoreBand(label="high", minimum_score=60.0),
+        )
     )
     df = pd.DataFrame(
         [
             {
                 "talentlinkId": "1001",
-                "description": "Planned catering budgets for office events. Python scripting automation and data analysis for reporting.",
-                "skills": ["Python", "SQL"],
+                "description": "Built dashboard reporting in Power BI and wrote SQL queries for reconciliations.",
+                "skills": ["Power BI", "SQL"],
             }
         ]
     )
 
     results = CompetencyScorer(config).score_dataframe(df)
 
-    assert set(
-        [
-            "talentlinkId",
-            "skill",
-            "cleaned_description",
-            "reference_text",
-            "match_signal_score",
-            "similarity_score",
-            "semantic_evidence_score",
-            "hybrid_score",
-            "competency_score",
-            "score_band",
-            "evidence_excerpt",
-        ]
-    ).issubset(results.columns)
-    assert len(results) == 2
+    assert len(results) == 10
+    required_columns = {
+        "talentlinkId",
+        "skill_id",
+        "skill",
+        "category",
+        "cleaned_description",
+        "source",
+        "matched_aliases",
+        "evidence_snippets",
+        "taxonomy_score",
+        "tfidf_score",
+        "similarity_score",
+        "graph_boost_score",
+        "final_score",
+        "competency_score",
+        "employee_average_competency_score",
+        "score_band",
+    }
+    assert required_columns.issubset(results.columns)
 
-    python_score = results.loc[results["skill"] == "Python", "similarity_score"].iloc[0]
-    sql_score = results.loc[results["skill"] == "SQL", "similarity_score"].iloc[0]
-    python_competency = results.loc[results["skill"] == "Python", "competency_score"].iloc[0]
+    power_bi_row = results.loc[results["skill"] == "Power BI"].iloc[0]
+    sql_row = results.loc[results["skill"] == "SQL"].iloc[0]
+    python_row = results.loc[results["skill"] == "Python"].iloc[0]
 
-    assert python_score > sql_score
-    assert python_competency >= 60
-    assert results.loc[results["skill"] == "Python", "score_band"].iloc[0] == "high"
+    assert power_bi_row["source"] == "alias"
+    assert sql_row["source"] == "alias"
+    assert power_bi_row["competency_score"] > 0
+    assert sql_row["competency_score"] > 0
+    assert json.loads(sql_row["matched_aliases"])
+    assert "SQL queries" in " ".join(json.loads(sql_row["evidence_snippets"]))
+    assert python_row["competency_score"] == 0.0
 
 
-def test_alias_matches_produce_moderate_or_better_scores():
+def test_competency_scorer_uses_embedding_fallback_when_no_alias_matches():
     config = PipelineConfig(
-        tfidf_max_features=None,
+        minimum_output_skill_score=0.0,
         score_bands=(
             ScoreBand(label="low", minimum_score=0.0),
             ScoreBand(label="medium", minimum_score=25.0),
             ScoreBand(label="high", minimum_score=60.0),
         ),
-        skill_references={
-            "sql": "Uses SQL to query relational databases and write joins for reporting.",
-        },
-        skill_aliases={
-            "sql": ("relational databases", "joins"),
-        },
     )
     df = pd.DataFrame(
         [
             {
                 "talentlinkId": "1001",
-                "description": "Analysed customer records and extracted data from relational databases with complex joins.",
-                "skills": ["SQL"],
+                "description": "Developed code to automate finance checks and streamline manual reporting tasks.",
+            }
+        ]
+    )
+
+    results = CompetencyScorer(config, embedding_model=FakeSemanticEmbedder()).score_dataframe(df)
+
+    python_row = results.loc[results["skill"] == "Python"].iloc[0]
+    assert python_row["source"] == "embedding"
+    assert python_row["taxonomy_score"] >= config.embedding_similarity_threshold
+    assert python_row["competency_score"] > 0.0
+
+
+def test_graph_boost_adds_small_related_scores():
+    config = PipelineConfig(minimum_output_skill_score=0.0)
+    df = pd.DataFrame(
+        [
+            {
+                "talentlinkId": "1001",
+                "description": "Built SQL queries, joins, and reporting extracts for month-end controls.",
             }
         ]
     )
 
     results = CompetencyScorer(config).score_dataframe(df)
 
-    assert results.loc[0, "match_signal_score"] == 0.8
-    assert results.loc[0, "competency_score"] >= 35.0
-    assert results.loc[0, "score_band"] in {"medium", "high"}
-
-
-def test_semantic_similarity_is_calibrated_before_hybrid_scoring():
-    config = PipelineConfig(
-        tfidf_max_features=None,
-        semantic_similarity_strong_threshold=0.10,
-        exact_match_weight=0.6,
-        semantic_similarity_weight=0.4,
-    )
-    scorer = CompetencyScorer(config)
-
-    assert scorer._calibrate_similarity(0.05) == 0.5
-    assert scorer._calibrate_similarity(0.20) == 1.0
-
-
-def test_competency_scorer_can_use_skill_focused_rewrite_per_skill():
-    config = PipelineConfig(
-        tfidf_max_features=None,
-        skill_references={
-            "python": "Uses Python for scripting automation and data analysis.",
-            "sql": "Uses SQL to query tables and write reporting joins.",
-        },
-    )
-    df = pd.DataFrame(
-        [
-            {
-                "talentlinkId": "1001",
-                "description": "Planned catering budgets for office events. Python scripting automation and data analysis for reporting.",
-                "skills": ["Python", "SQL"],
-            }
-        ]
-    )
-
-    results = CompetencyScorer(config, llm_client=FakeSkillRewriteClient()).score_dataframe(df)
-
-    python_row = results.loc[results["skill"] == "Python"].iloc[0]
     sql_row = results.loc[results["skill"] == "SQL"].iloc[0]
+    data_analysis_row = results.loc[results["skill"] == "Data Analysis"].iloc[0]
 
-    assert python_row["cleaned_description"] == "python scripting automation and data analysis for reporting"
-    assert sql_row["cleaned_description"] == "planned catering budgets for office events"
-    assert python_row["similarity_score"] > sql_row["similarity_score"]
+    assert sql_row["source"] == "alias"
+    assert data_analysis_row["graph_boost_score"] > 0.0
+    assert data_analysis_row["competency_score"] > 0.0
+    assert data_analysis_row["graph_boost_score"] < sql_row["final_score"]
+
+
+def test_score_text_returns_filtered_structured_output():
+    scorer = CompetencyScorer(PipelineConfig(minimum_output_skill_score=0.1))
+
+    payload = scorer.score_text(
+        "Used pandas in a Jupyter notebook to automate reporting checks and create SQL queries."
+    )
+
+    assert "skills" in payload
+    assert payload["skills"]
+    assert payload["skills"][0]["skill"] in {"Python", "SQL"}
+    assert payload["skills"][0]["score"] >= payload["skills"][-1]["score"]

@@ -17,7 +17,7 @@ LOGGER = get_logger(__name__)
 
 
 def main() -> None:
-    """Run evaluation over the competency scoring output and write summary artifacts."""
+    """Run evaluation over the competency scoring output and write a markdown report."""
 
     configure_logging()
     scores_path = DEFAULT_CONFIG.output_csv_path
@@ -31,25 +31,11 @@ def main() -> None:
     employee_summary = summarise_employee_scores(results_df)
     report = render_evaluation_report(metrics, skill_summary, band_summary, employee_summary)
 
-    output_paths = [
-        DEFAULT_CONFIG.evaluation_skill_summary_csv_path,
-        DEFAULT_CONFIG.evaluation_band_summary_csv_path,
-        DEFAULT_CONFIG.evaluation_employee_summary_csv_path,
-        DEFAULT_CONFIG.evaluation_report_path,
-    ]
-    for path in output_paths:
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-
-    skill_summary.to_csv(DEFAULT_CONFIG.evaluation_skill_summary_csv_path, index=False)
-    band_summary.to_csv(DEFAULT_CONFIG.evaluation_band_summary_csv_path, index=False)
-    employee_summary.to_csv(DEFAULT_CONFIG.evaluation_employee_summary_csv_path, index=False)
+    Path(DEFAULT_CONFIG.evaluation_report_path).parent.mkdir(parents=True, exist_ok=True)
     DEFAULT_CONFIG.evaluation_report_path.write_text(report)
 
     LOGGER.info(
-        "evaluation_complete skill_summary=%s band_summary=%s employee_summary=%s report=%s",
-        DEFAULT_CONFIG.evaluation_skill_summary_csv_path,
-        DEFAULT_CONFIG.evaluation_band_summary_csv_path,
-        DEFAULT_CONFIG.evaluation_employee_summary_csv_path,
+        "evaluation_complete report=%s",
         DEFAULT_CONFIG.evaluation_report_path,
     )
 

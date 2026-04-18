@@ -1,0 +1,11 @@
+skill_id,canonical_name,category,description
+SK001,Data Analysis,Analytics,"Applies data analysis to explore datasets, identify patterns, evaluate trends, and produce actionable business insight."
+SK002,Data Governance,Governance,"Applies data governance by improving data quality, defining standards, enforcing controls, and supporting trusted reporting."
+SK003,ETL Design,Data Engineering,"Designs ETL processes to extract, transform, validate, and load data across systems in a controlled and scalable way."
+SK004,Power BI,Analytics,"Uses Power BI to build dashboards, model measures, create visuals, and communicate performance insights to stakeholders."
+SK005,Programme Delivery,Delivery,"Supports programme delivery through planning, governance, milestone tracking, workstream coordination, and issue management."
+SK006,Python,Engineering,"Uses Python for scripting, automation, analysis, and technical problem solving across data and reporting workflows."
+SK007,Regulatory Reporting,Compliance,"Supports regulatory reporting by preparing submissions, validating data, reconciling outputs, and meeting reporting obligations."
+SK008,Risk Controls,Risk,"Applies risk controls through control design, testing, assurance, mitigation, and control effectiveness monitoring."
+SK009,SQL,Data Engineering,"Uses SQL to query databases, join tables, transform data, optimize retrieval, and support reporting or analysis."
+SK010,Stakeholder Management,Delivery,"Manages stakeholders by gathering requirements, aligning expectations, communicating decisions, and coordinating cross-functional delivery."

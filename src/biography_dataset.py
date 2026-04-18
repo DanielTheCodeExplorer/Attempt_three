@@ -11,11 +11,14 @@ from src.logging_utils import get_logger
 LOGGER = get_logger(__name__)
 
 
-def create_biography_dataset(input_csv_path: str | Path, output_csv_path: str | Path) -> pd.DataFrame:
+def create_biography_dataset(
+    input_csv_path: str | Path,
+    output_csv_path: str | Path | None = None,
+) -> pd.DataFrame:
     """Create a clean biography-based employee dataset for competency scoring."""
 
     input_path = Path(input_csv_path)
-    output_path = Path(output_csv_path)
+    output_path = Path(output_csv_path) if output_csv_path is not None else None
     LOGGER.info("create_biography_dataset_start input=%s output=%s", input_path, output_path)
 
     df = pd.read_csv(input_path)
@@ -56,8 +59,9 @@ def create_biography_dataset(input_csv_path: str | Path, output_csv_path: str | 
     )
 
     grouped = grouped[["talentlinkId", "skills", "biography", "description", "position"]]
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    grouped.to_csv(output_path, index=False)
+    if output_path is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        grouped.to_csv(output_path, index=False)
     LOGGER.info("create_biography_dataset_complete rows=%s output=%s", len(grouped), output_path)
     return grouped
 

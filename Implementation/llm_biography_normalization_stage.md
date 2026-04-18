@@ -1,22 +1,23 @@
 # LLM Biography Normalization Stage
 
 ## Purpose
-This note explains the new LLM-based normalization stage added before competency scoring in the biography pipeline.
+This note explains the current LLM-based normalization stage used in the biography pipeline and the final competency dataset.
 
-The aim of this stage is to take raw biography and description text, with optional position context, and rewrite them into a more standardised skill-evidence format so the downstream scoring model receives cleaner and more comparable input.
+The purpose of this stage is to convert biography text into structured, auditable skill evidence before downstream TF-IDF scoring and confidence assignment. In the current workflow, the LLM is not the final scorer. Instead, it provides structured skill evidence and evidence-strength labels that feed into the final competency calculations.
 
-## New Module
-The new module is:
+## Main Module
+The main module is:
 
 - `src/llm_normalizer.py`
 
 It provides:
 
-- the exact LLM extraction prompt,
+- the extraction prompt,
 - `normalize_biography_text(...)`,
 - `normalize_biography_dataframe(...)`,
+- `extract_supported_skills_from_text(...)`,
 - structured validation of the LLM JSON response,
-- conservative fallback behavior if the LLM call is unavailable or fails.
+- conservative fallback behavior when the LLM client is unavailable.
 
 ## Required JSON Output
 The normalizer returns JSON with:
@@ -32,7 +33,7 @@ Each `matched_skills` entry contains:
 - `evidence_sentence`
 - `evidence_strength`
 
-## Exact Prompt Used
+## Prompt Behavior
 The exact prompt is stored in `src/llm_normalizer.py` as `LLM_NORMALIZER_PROMPT`.
 
 It instructs the model to:
@@ -41,43 +42,88 @@ It instructs the model to:
 - avoid inventing skills,
 - restrict skills to the allowed list when provided,
 - prefer precision over recall,
-- return valid JSON only.
+- return valid JSON only,
+- return fewer skills rather than guessing if evidence is weak.
 
-## Integration Point
-The integration point is the biography pipeline in:
+## Integration Points
+The main integration points are:
 
 - `src/run_biography_pipeline.py`
+- `src/final_competency_dataset.py`
 
-The updated sequence is now:
+The current biography sequence is:
 
 1. create the base biography dataset,
-2. run LLM normalization over each biography, description, and optional position,
-3. save a normalized biography dataset,
-4. score using `clean_skill_evidence_text` through the normal pipeline,
-5. write biography-based score and evaluation outputs.
+2. run normalization over each employee biography,
+3. save the normalized biography dataset,
+4. keep the biography evidence text available for downstream scoring,
+5. derive biography-side evidence strength from the matched skills,
+6. combine this with biography TF-IDF scoring in the final dataset.
 
-## How the scorer uses normalized text
-The loader already expects a `description` field. The normalization stage now creates:
+## How the final scorer uses normalized biography text
+The biography normalizer creates:
 
+- `standardized_summary`
+- `matched_skills_json`
 - `clean_skill_evidence_text`
-- `description`
 
-The `description` field is set from `clean_skill_evidence_text` when available, so the scorer uses normalized evidence text instead of the raw biography or raw description text.
+The normalized dataframe then sets:
+
+- `description = clean_skill_evidence_text` when available
+
+This means downstream scoring evaluates biography-derived evidence text rather than the raw biography block wherever possible.
+
+In the current final workflow, the biography evidence is used in two ways:
+
+- TF-IDF scoring against the canonical skill profiles,
+- LLM-derived evidence confidence via `evidence_strength`.
+
+The LLM therefore supports the final score, but does not replace the TF-IDF component.
+
+## Why this changed
+The earlier design attempted to use the LLM as a stronger extraction-first scorer. In practice, the project still needed a final dataset that combined:
+
+- textual similarity,
+- evidence strength,
+- source-by-source comparison.
+
+For that reason, the role of the biography normalizer became narrower and more controlled. It now focuses on:
+
+- structuring biography evidence,
+- preserving auditability,
+- assigning evidence strength,
+- supporting downstream TF-IDF-based competency calculations.
+
+## Confidence Mapping
+The final dataset maps `evidence_strength` to numeric confidence values:
+
+- `high -> 1.0`
+- `medium -> 0.7`
+- `low -> 0.4`
+
+These values are then used for:
+
+- `biography_confidence_score`
+- and, through the same extraction logic, `job_description_confidence_score`
+
+The final shared helper column is:
+
+- `confidence_score = ((biography_confidence_score + job_description_confidence_score) / 2) * 100`
 
 ## Configuration
-The model name is configured through the environment variable:
+The model name is configured through:
 
 - `OPENAI_MODEL_NAME`
-
-This is read into `PipelineConfig.llm_model_name`.
 
 The optional base URL is configured through:
 
 - `OPENAI_BASE_URL`
 
-The OpenAI API key is expected through:
+The API key is expected through:
 
 - `OPENAI_API_KEY`
+
+If no working client is available, the module uses its conservative fallback path.
 
 ## Error Handling
 The normalizer includes:
@@ -90,62 +136,55 @@ The normalizer includes:
 The fallback is intentionally strict:
 
 - it returns fewer skills rather than more,
-- it only keeps explicit direct skill matches found in the source text.
+- it avoids unsupported matches,
+- it keeps the pipeline operational in offline environments.
 
 ## Files Changed
 - `src/config.py`
 - `src/llm_normalizer.py`
 - `src/run_biography_pipeline.py`
-- `requirements.txt`
-- `pyproject.toml`
+- `src/final_competency_dataset.py`
 - `tests/test_llm_normalizer.py`
+- `tests/test_final_competency_dataset.py`
 
 ## Example Input
 Biography:
 
-`Built Python automation for reporting.`
-
-Description:
-
-`Queried data using SQL for reporting.`
-
-Position:
-
-`Consultant`
+`Built Python automation for reporting and queried data using SQL for reconciliations.`
 
 Allowed skills:
 
 - `Python`
 - `SQL`
+- `Power BI`
 
 ## Example Output
 ```json
 {
-  "standardized_summary": "Delivers Python automation and SQL reporting work.",
+  "standardized_summary": "Built reporting automation and data-querying support work.",
   "matched_skills": [
     {
       "skill": "Python",
       "evidence_phrase": "Python automation",
-      "evidence_sentence": "Built Python automation for reporting.",
+      "evidence_sentence": "Built Python automation for reporting and queried data using SQL for reconciliations.",
       "evidence_strength": "high"
     },
     {
       "skill": "SQL",
-      "evidence_phrase": "SQL reporting",
-      "evidence_sentence": "Queried data using SQL for reporting.",
+      "evidence_phrase": "queried data using SQL",
+      "evidence_sentence": "Built Python automation for reporting and queried data using SQL for reconciliations.",
       "evidence_strength": "medium"
     }
   ],
-  "clean_skill_evidence_text": "Python automation for reporting. SQL reporting and data querying."
+  "clean_skill_evidence_text": "Python automation for reporting. Queried data using SQL for reconciliations."
 }
 ```
 
-## Why this was added
-The earlier scoring pipeline used raw biography or description text directly. That created inconsistent wording and made lexical matching brittle.
+## Why this stage matters
+This stage improves the final pipeline by:
 
-The LLM normalization stage improves this by:
-
-- rewriting source text into standardised evidence wording,
-- extracting only supported skill evidence,
-- creating a cleaner text field for downstream similarity scoring,
-- preserving explainability through structured matched-skill evidence.
+- turning broad biography text into structured evidence,
+- restricting output to skills supported by the source text,
+- creating cleaner biography evidence for downstream scoring,
+- preserving explainability through phrase-level and sentence-level evidence,
+- supplying confidence values that are later combined with TF-IDF scores in the final competency dataset.

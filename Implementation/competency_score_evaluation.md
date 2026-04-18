@@ -1,39 +1,63 @@
 # Competency Score Evaluation
 
 ## Overview
+- This note reflects the current extraction-first scoring workflow.
+- The score outputs are now based on declared-skill versus extracted-skill matching, not TF-IDF cosine similarity against a fixed reference sentence.
+
+## Current Job-History Output Summary
 - Score rows evaluated: 958
 - Employees evaluated: 105
 - Unique skills evaluated: 10
-- Average chunk similarity score: 0.0111
-- Average competency score: 3.72
-- High-band ratio: 0.0
+- Average competency score: 25.95
+- Average employee-level competency score: 25.95
+- Matched-skill ratio: 0.2683
 
-## Score Band Distribution
-- low: 958 rows (100.00%)
+## Current Job-History Score Band Distribution
+- low: 701 rows (73.17%)
+- high: 257 rows (26.83%)
 
-## Highest Average Skills
-- Programme Delivery: avg score 9.65, avg similarity 0.0289, high-band count 0
-- Regulatory Reporting: avg score 8.33, avg similarity 0.0250, high-band count 0
-- Data Governance: avg score 5.63, avg similarity 0.0169, high-band count 0
-- Risk Controls: avg score 4.92, avg similarity 0.0147, high-band count 0
-- SQL: avg score 4.65, avg similarity 0.0139, high-band count 0
+## Highest Average Skills in Job-History Output
+- Stakeholder Management: avg score 97.02
+- Programme Delivery: avg score 91.46
+- Regulatory Reporting: avg score 65.32
+- Data Analysis: avg score 4.42
+- Risk Controls: avg score 4.21
 
-## Lowest Average Skills
-- Data Analysis: avg score 0.00, avg similarity 0.0000, high-band count 0
-- ETL Design: avg score 0.00, avg similarity 0.0000, high-band count 0
-- Power BI: avg score 0.00, avg similarity 0.0000, high-band count 0
-- Python: avg score 0.00, avg similarity 0.0000, high-band count 0
-- Stakeholder Management: avg score 4.10, avg similarity 0.0123, high-band count 0
+## Current Biography Output Summary
+- Score rows evaluated: 656
+- Employees evaluated: 71
+- Unique skills evaluated: 10
+- Average competency score: 35.87
+- Average employee-level competency score: 35.87
+- Matched-skill ratio: 0.8476
 
-## Highest Average Employees
-- 4772246.0: avg score 4.79 across 8 skills, high-band count 0
-- 14265799.0: avg score 4.70 across 5 skills, high-band count 0
-- 835575.0: avg score 4.70 across 6 skills, high-band count 0
-- 70726434.0: avg score 4.29 across 2 skills, high-band count 0
-- 2927455.0: avg score 4.27 across 8 skills, high-band count 0
+## Current Biography Score Band Distribution
+- medium: 513 rows (78.20%)
+- low: 100 rows (15.24%)
+- high: 43 rows (6.55%)
+
+## Highest Average Skills in Biography Output
+- Data Governance: avg score 44.55
+- Power BI: avg score 40.00
+- Regulatory Reporting: avg score 40.00
+- Risk Controls: avg score 40.00
+- SQL: avg score 40.00
 
 ## Interpretation
 - This evaluation is descriptive rather than benchmarked against a human-labelled ground truth.
-- The results show how the current hybrid scorer distributes support scores across skills and employees.
-- The current model combines direct exact or alias evidence with the strongest chunk-level TF-IDF similarity signal.
-- Persistently low average scores indicate that many listed skills are still weakly evidenced in the available descriptions under the current reference and weighting design.
+- A score now reflects whether a declared skill was extracted from the employee text and how strong that extracted evidence was.
+- The score is no longer a similarity percentage. It is an evidence-support score derived from extracted skill matches.
+- A `0` score means the declared skill was not supported by the extracted evidence.
+- A non-zero score means the skill was supported and the score level depends on evidence strength:
+  - `high -> 100`
+  - `medium -> 70`
+  - `low -> 40`
+- The employee-level average is the mean across all declared skills for that employee.
+
+## Methodological Note
+This updated workflow is easier to explain than the earlier cosine-based benchmark comparison for the current dataset because it directly answers:
+
+- which declared skills are supported by the text,
+- and how strong that support is.
+
+That makes the output more interpretable for audit and downstream modelling.

@@ -1,0 +1,16 @@
+edge_id,source_skill_id,target_skill_id,edge_type,weight
+ED001,SK009,SK001,used_with,0.85
+ED002,SK009,SK004,used_with,0.8
+ED003,SK009,SK007,used_with,0.7
+ED004,SK006,SK001,used_with,0.8
+ED005,SK006,SK003,used_with,0.75
+ED006,SK003,SK002,related_to,0.65
+ED007,SK003,SK009,used_with,0.85
+ED008,SK002,SK007,related_to,0.8
+ED009,SK002,SK008,related_to,0.75
+ED010,SK005,SK010,related_to,0.85
+ED011,SK005,SK007,related_to,0.6
+ED012,SK007,SK008,related_to,0.75
+ED013,SK001,SK010,related_to,0.55
+ED014,SK004,SK010,related_to,0.6
+ED015,SK008,SK010,related_to,0.55

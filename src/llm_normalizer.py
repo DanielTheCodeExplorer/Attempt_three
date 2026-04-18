@@ -1,6 +1,6 @@
 import json
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Protocol
 
 import pandas as pd
@@ -8,6 +8,7 @@ import pandas as pd
 from src.config import PipelineConfig
 from src.data_loader import parse_skills
 from src.logging_utils import get_logger
+from src.skill_specific_profile import generate_skill_specific_profile
 from src.text_preprocessing import normalise_skill_name
 
 
@@ -138,7 +139,7 @@ def normalize_biography_text(
         active_client = client or build_openai_client()
         if active_client is None:
             LOGGER.warning("llm_normalizer_fallback reason=no_client")
-            return conservative_fallback_result(source_text, allowed_skills).to_dict()
+            return conservative_fallback_result(source_text, allowed_skills, config=config).to_dict()
 
         response = active_client.chat.completions.create(
             model=config.llm_model_name,
@@ -151,7 +152,7 @@ def normalize_biography_text(
         return validate_normalized_payload(payload, source_text, allowed_skills).to_dict()
     except Exception as exc:
         LOGGER.warning("llm_normalizer_fallback reason=exception error=%s", exc)
-        return conservative_fallback_result(source_text, allowed_skills).to_dict()
+        return conservative_fallback_result(source_text, allowed_skills, config=config).to_dict()
 
 
 def rewrite_description_for_skill(
@@ -160,7 +161,7 @@ def rewrite_description_for_skill(
     config: PipelineConfig | None = None,
     client: SupportsChatCompletions | None = None,
 ) -> dict[str, str]:
-    """Rewrite a cleaned description so it focuses on one target skill."""
+    """Compatibility wrapper around the skill-specific retrieve-then-rewrite generator."""
 
     config = config or PipelineConfig()
     normalized_description = str(cleaned_description or "").strip()
@@ -171,23 +172,44 @@ def rewrite_description_for_skill(
             evidence_strength="low",
         ).to_dict()
 
-    try:
-        active_client = client or build_openai_client()
-        if active_client is None:
-            return fallback_skill_focused_rewrite(normalized_description, normalized_skill).to_dict()
+    payload = generate_skill_specific_profile(
+        talentlink_id="",
+        description=normalized_description,
+        skills=[normalized_skill],
+        target_skill=normalized_skill,
+        config=config,
+        client=client,
+    )
+    confidence_score = float(payload.get("confidence_score", 0.0))
+    if confidence_score >= 0.75:
+        evidence_strength = "high"
+    elif confidence_score >= 0.4:
+        evidence_strength = "medium"
+    else:
+        evidence_strength = "low"
 
-        response = active_client.chat.completions.create(
-            model=config.llm_model_name,
-            temperature=0,
-            response_format={"type": "json_object"},
-            messages=build_skill_focused_messages(normalized_description, normalized_skill),
-        )
-        content = response.choices[0].message.content
-        payload = json.loads(content)
-        return validate_skill_focused_payload(payload, normalized_description).to_dict()
-    except Exception as exc:
-        LOGGER.warning("skill_focused_rewrite_fallback reason=exception error=%s", exc)
-        return fallback_skill_focused_rewrite(normalized_description, normalized_skill).to_dict()
+    return SkillFocusedRewriteResult(
+        skill_focused_description=str(payload.get("skill_specific_profile", "")).strip(),
+        evidence_strength=evidence_strength,
+    ).to_dict()
+
+
+def extract_supported_skills_from_text(
+    description_text: str,
+    allowed_skills: list[str] | None = None,
+    config: PipelineConfig | None = None,
+    client: SupportsChatCompletions | None = None,
+) -> dict[str, Any]:
+    """Extract supported skills from a description-only text block."""
+
+    return normalize_biography_text(
+        biography_text="",
+        description_text=description_text,
+        position=None,
+        allowed_skills=allowed_skills,
+        config=config,
+        client=client,
+    )
 
 
 def normalize_biography_dataframe(
@@ -202,8 +224,8 @@ def normalize_biography_dataframe(
     normalized_payloads = [
         normalize_biography_text(
             biography_text=row.get("biography", ""),
-            description_text=row.get("description", ""),
-            position=row.get("position", ""),
+            description_text="",
+            position=None,
             allowed_skills=parse_skills(row.get("skills", None)),
             config=config,
             client=client,
@@ -216,8 +238,8 @@ def normalize_biography_dataframe(
     working["clean_skill_evidence_text"] = [payload["clean_skill_evidence_text"] for payload in normalized_payloads]
     working["description"] = working["clean_skill_evidence_text"].where(
         working["clean_skill_evidence_text"].astype(str).str.strip().ne(""),
-        working["description"].where(
-            working["description"].astype(str).str.strip().ne(""),
+        working["biography"].where(
+            working["biography"].astype(str).str.strip().ne(""),
             working["biography"],
         ),
     )
@@ -361,30 +383,44 @@ def validate_normalized_payload(
 def conservative_fallback_result(
     biography: str,
     allowed_skills: list[str] | None,
+    config: PipelineConfig | None = None,
 ) -> NormalizedBiographyResult:
     """Return a conservative fallback result when the LLM is unavailable or fails."""
 
+    config = config or PipelineConfig()
+    fallback_config = replace(config, skill_focused_rewrite_enabled=False)
     normalized_biography = biography.strip()
     matched_skills: list[MatchedSkillEvidence] = []
+    evidence_blocks: list[str] = []
 
     if allowed_skills:
-        lowered_text = f" {normalise_skill_name(normalized_biography)} "
         for skill in allowed_skills:
-            normalized_skill = normalise_skill_name(skill)
-            if normalized_skill and f" {normalized_skill} " in lowered_text:
-                matched_skills.append(
-                    MatchedSkillEvidence(
-                        skill=skill,
-                        evidence_phrase=skill,
-                        evidence_sentence=biography,
-                        evidence_strength="high",
-                    )
-                )
+            payload = generate_skill_specific_profile(
+                talentlink_id="",
+                description=normalized_biography,
+                skills=allowed_skills,
+                target_skill=skill,
+                config=fallback_config,
+                client=None,
+            )
+            evidence_spans = [str(span).strip() for span in payload.get("evidence_spans", []) if str(span).strip()]
+            if not evidence_spans:
+                continue
 
-    clean_text = " ".join(
-        f"{item.skill}: {item.evidence_phrase}."
-        for item in matched_skills
-    ).strip() or normalized_biography
+            confidence_score = float(payload.get("confidence_score", 0.0))
+            matched_skills.append(
+                MatchedSkillEvidence(
+                    skill=skill,
+                    evidence_phrase=evidence_spans[0],
+                    evidence_sentence=evidence_spans[0],
+                    evidence_strength=_confidence_to_strength(confidence_score),
+                )
+            )
+            skill_profile = str(payload.get("skill_specific_profile", "")).strip()
+            if skill_profile:
+                evidence_blocks.append(skill_profile)
+
+    clean_text = " ".join(dict.fromkeys(block for block in evidence_blocks if block)).strip() or normalized_biography
 
     return NormalizedBiographyResult(
         standardized_summary=normalized_biography,
@@ -413,3 +449,11 @@ def empty_normalization_result() -> NormalizedBiographyResult:
         matched_skills=[],
         clean_skill_evidence_text="",
     )
+
+
+def _confidence_to_strength(confidence_score: float) -> str:
+    if confidence_score >= 0.75:
+        return "high"
+    if confidence_score >= 0.4:
+        return "medium"
+    return "low"

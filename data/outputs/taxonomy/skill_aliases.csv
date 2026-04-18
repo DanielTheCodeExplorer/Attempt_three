@@ -1,0 +1,51 @@
+alias_id,alias_text,skill_id,alias_type,weight
+AL001,data analytics,SK001,synonym,0.95
+AL002,insight generation,SK001,related_phrase,0.75
+AL003,trend analysis,SK001,related_phrase,0.78
+AL004,exploratory analysis,SK001,related_phrase,0.82
+AL005,interpreting datasets,SK001,related_phrase,0.72
+AL006,data quality,SK002,related_phrase,0.92
+AL007,data stewardship,SK002,synonym,0.87
+AL008,data standards,SK002,subconcept,0.82
+AL009,governance framework,SK002,related_phrase,0.78
+AL010,master data controls,SK002,related_phrase,0.72
+AL011,etl pipeline,SK003,exact,0.96
+AL012,extract transform load,SK003,exact,0.96
+AL013,data integration,SK003,synonym,0.86
+AL014,ingestion pipeline,SK003,related_phrase,0.82
+AL015,workflow orchestration,SK003,related_phrase,0.74
+AL016,powerbi,SK004,exact,0.99
+AL017,dax,SK004,tool,0.92
+AL018,power query,SK004,tool,0.88
+AL019,dashboard reporting,SK004,related_phrase,0.82
+AL020,visual analytics,SK004,related_phrase,0.76
+AL021,program delivery,SK005,exact,0.99
+AL022,delivery management,SK005,synonym,0.87
+AL023,milestone tracking,SK005,related_phrase,0.84
+AL024,workstream coordination,SK005,related_phrase,0.82
+AL025,roadmap delivery,SK005,related_phrase,0.77
+AL026,python scripting,SK006,exact,0.96
+AL027,automation scripts,SK006,related_phrase,0.84
+AL028,pandas,SK006,tool,0.91
+AL029,numpy,SK006,tool,0.87
+AL030,jupyter notebook,SK006,tool,0.78
+AL031,regulatory submissions,SK007,synonym,0.91
+AL032,regulatory returns,SK007,synonym,0.87
+AL033,prudential reporting,SK007,related_phrase,0.83
+AL034,compliance reporting,SK007,related_phrase,0.82
+AL035,statutory reporting,SK007,related_phrase,0.76
+AL036,controls testing,SK008,related_phrase,0.87
+AL037,control framework,SK008,subconcept,0.86
+AL038,control effectiveness,SK008,related_phrase,0.83
+AL039,risk mitigation,SK008,related_phrase,0.78
+AL040,assurance controls,SK008,related_phrase,0.73
+AL041,structured query language,SK009,exact,0.99
+AL042,sql queries,SK009,exact,0.96
+AL043,joins,SK009,subconcept,0.77
+AL044,stored procedures,SK009,subconcept,0.77
+AL045,relational database,SK009,related_phrase,0.76
+AL046,stakeholder engagement,SK010,synonym,0.91
+AL047,requirements gathering,SK010,related_phrase,0.87
+AL048,client communication,SK010,related_phrase,0.82
+AL049,senior stakeholders,SK010,related_phrase,0.78
+AL050,cross functional coordination,SK010,related_phrase,0.77

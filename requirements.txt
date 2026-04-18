@@ -6,3 +6,4 @@ polars
 scikit-learn
 pytest
 openai
+sentence-transformers

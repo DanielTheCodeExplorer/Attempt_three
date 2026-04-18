@@ -12,6 +12,7 @@ dependencies = [
     "pandas",
     "polars",
     "scikit-learn",
+    "sentence-transformers",
 ]
 
 [tool.pytest.ini_options]

@@ -1,0 +1,657 @@
+talentlinkId,skill,competency_score
+14265799,Data Analysis,40.0
+14265799,Risk Controls,40.0
+14265799,Python,40.0
+14265799,Regulatory Reporting,40.0
+14265799,Programme Delivery,40.0
+70217,ETL Design,40.0
+70217,Python,40.0
+70217,SQL,40.0
+70217,Data Governance,70.0
+271339,Python,40.0
+271339,Data Governance,40.0
+271339,Regulatory Reporting,40.0
+271339,Data Analysis,40.0
+271339,Power BI,40.0
+271339,Risk Controls,40.0
+271339,ETL Design,40.0
+271339,Programme Delivery,40.0
+271339,Stakeholder Management,0.0
+88320463,Regulatory Reporting,40.0
+88320463,ETL Design,40.0
+88320463,Stakeholder Management,40.0
+88320463,Programme Delivery,40.0
+88320463,Data Governance,40.0
+88320463,Data Analysis,40.0
+88320463,Power BI,40.0
+88320463,SQL,40.0
+88320463,Python,40.0
+170674,SQL,40.0
+170674,Programme Delivery,40.0
+170674,Data Governance,70.0
+170674,Python,40.0
+170674,Data Analysis,40.0
+170674,Power BI,40.0
+170674,Regulatory Reporting,40.0
+170674,Stakeholder Management,0.0
+170674,Risk Controls,40.0
+170674,ETL Design,40.0
+662336,ETL Design,0.0
+662336,SQL,40.0
+662336,Power BI,40.0
+662336,Data Governance,40.0
+662336,Regulatory Reporting,40.0
+662336,Stakeholder Management,70.0
+662336,Risk Controls,40.0
+662336,Data Analysis,0.0
+662336,Python,0.0
+662336,Programme Delivery,40.0
+84593961,Regulatory Reporting,40.0
+84593961,ETL Design,40.0
+84593961,Data Analysis,40.0
+84593961,Data Governance,40.0
+84593961,Stakeholder Management,0.0
+84593961,SQL,40.0
+84593961,Risk Controls,40.0
+84593961,Power BI,40.0
+84593961,Programme Delivery,40.0
+84593961,Python,40.0
+9874152,Regulatory Reporting,40.0
+9874152,Stakeholder Management,0.0
+9874152,Python,40.0
+9874152,Data Analysis,40.0
+9874152,ETL Design,40.0
+9874152,SQL,40.0
+9874152,Risk Controls,40.0
+9874152,Programme Delivery,40.0
+9874152,Power BI,40.0
+877236,Programme Delivery,40.0
+877236,SQL,40.0
+877236,Stakeholder Management,0.0
+877236,Data Analysis,40.0
+877236,ETL Design,40.0
+877236,Regulatory Reporting,40.0
+877236,Data Governance,40.0
+877236,Power BI,40.0
+877236,Python,40.0
+877236,Risk Controls,40.0
+8235969,Risk Controls,40.0
+8235969,Data Governance,40.0
+8235969,Power BI,40.0
+8235969,SQL,40.0
+8235969,Stakeholder Management,0.0
+8235969,Python,40.0
+8235969,Programme Delivery,40.0
+8235969,Regulatory Reporting,40.0
+8235969,ETL Design,40.0
+8235969,Data Analysis,40.0
+87844239,Regulatory Reporting,40.0
+87844239,SQL,40.0
+87844239,Data Governance,40.0
+87844239,Risk Controls,40.0
+87844239,Data Analysis,40.0
+87844239,ETL Design,40.0
+87844239,Programme Delivery,40.0
+87844239,Python,40.0
+87844239,Power BI,40.0
+87844239,Stakeholder Management,0.0
+76354180,Data Governance,40.0
+76354180,Regulatory Reporting,40.0
+76354180,Power BI,40.0
+76354180,Data Analysis,40.0
+76354180,SQL,40.0
+76354180,Programme Delivery,40.0
+76354180,Stakeholder Management,0.0
+76354180,ETL Design,40.0
+76354180,Risk Controls,40.0
+76354180,Python,40.0
+70407340,Stakeholder Management,0.0
+70407340,Python,40.0
+70407340,Power BI,40.0
+70407340,Risk Controls,40.0
+70407340,SQL,40.0
+70407340,ETL Design,40.0
+70407340,Programme Delivery,40.0
+70407340,Regulatory Reporting,40.0
+70407340,Data Governance,70.0
+61645,SQL,40.0
+61645,Programme Delivery,40.0
+61645,Stakeholder Management,70.0
+61645,Data Governance,40.0
+61645,Data Analysis,0.0
+61645,Risk Controls,40.0
+61645,Python,0.0
+61645,Regulatory Reporting,40.0
+61645,ETL Design,0.0
+61645,Power BI,40.0
+91439,Power BI,40.0
+91439,Python,40.0
+91439,Data Analysis,40.0
+91439,ETL Design,40.0
+91439,Regulatory Reporting,40.0
+91439,Risk Controls,40.0
+91439,Programme Delivery,40.0
+91439,Data Governance,70.0
+84177,Stakeholder Management,70.0
+84177,Data Analysis,0.0
+84177,Risk Controls,40.0
+84177,SQL,40.0
+84177,Programme Delivery,40.0
+84177,Power BI,40.0
+84177,Python,0.0
+84177,Regulatory Reporting,40.0
+84177,Data Governance,40.0
+971084,Data Governance,40.0
+971084,ETL Design,0.0
+971084,Power BI,40.0
+971084,Regulatory Reporting,40.0
+971084,Stakeholder Management,70.0
+971084,Data Analysis,0.0
+971084,Python,0.0
+300845,ETL Design,40.0
+300845,Data Analysis,40.0
+300845,Risk Controls,40.0
+300845,Power BI,40.0
+300845,Stakeholder Management,0.0
+300845,Programme Delivery,40.0
+300845,Python,40.0
+300845,Regulatory Reporting,40.0
+300845,SQL,40.0
+300845,Data Governance,70.0
+55728776,Python,40.0
+55728776,SQL,40.0
+55728776,Power BI,40.0
+55728776,Data Analysis,40.0
+55728776,Risk Controls,40.0
+55728776,Programme Delivery,40.0
+55728776,Data Governance,40.0
+55728776,Stakeholder Management,0.0
+55728776,Regulatory Reporting,40.0
+55728776,ETL Design,40.0
+2010496,Programme Delivery,40.0
+2010496,Data Governance,70.0
+2010496,Power BI,40.0
+2010496,Risk Controls,40.0
+2010496,ETL Design,40.0
+2010496,Stakeholder Management,40.0
+2010496,SQL,40.0
+2010496,Regulatory Reporting,40.0
+2010496,Python,40.0
+2010496,Data Analysis,40.0
+779094,Regulatory Reporting,40.0
+779094,Python,0.0
+779094,SQL,40.0
+779094,Risk Controls,40.0
+779094,Data Governance,40.0
+779094,ETL Design,0.0
+779094,Power BI,40.0
+779094,Data Analysis,0.0
+779094,Stakeholder Management,70.0
+779094,Programme Delivery,40.0
+98117,Data Governance,0.0
+98117,Python,40.0
+98117,SQL,40.0
+98117,ETL Design,0.0
+98117,Stakeholder Management,70.0
+98117,Programme Delivery,0.0
+98117,Power BI,40.0
+1043037,Programme Delivery,40.0
+1043037,Risk Controls,40.0
+1043037,Regulatory Reporting,40.0
+1043037,Data Analysis,40.0
+1043037,Data Governance,70.0
+1043037,Python,40.0
+1043037,Stakeholder Management,0.0
+1043037,Power BI,40.0
+1043037,ETL Design,40.0
+1043037,SQL,40.0
+626690,Data Analysis,0.0
+626690,SQL,40.0
+626690,Regulatory Reporting,40.0
+626690,Power BI,40.0
+626690,Stakeholder Management,70.0
+626690,Data Governance,40.0
+626690,ETL Design,0.0
+626690,Risk Controls,40.0
+626690,Python,0.0
+626690,Programme Delivery,40.0
+66881,ETL Design,0.0
+66881,SQL,40.0
+66881,Python,0.0
+66881,Data Governance,40.0
+66881,Stakeholder Management,70.0
+44269370,Programme Delivery,40.0
+44269370,Data Analysis,40.0
+44269370,Stakeholder Management,0.0
+44269370,Power BI,40.0
+44269370,Data Governance,40.0
+44269370,ETL Design,40.0
+44269370,Risk Controls,40.0
+44269370,Python,40.0
+44269370,Regulatory Reporting,40.0
+44269370,SQL,40.0
+13358751,Regulatory Reporting,40.0
+13358751,Risk Controls,40.0
+13358751,ETL Design,0.0
+13358751,Python,0.0
+13358751,Stakeholder Management,70.0
+13358751,Data Governance,40.0
+13358751,Data Analysis,0.0
+13358751,Power BI,40.0
+13358751,SQL,40.0
+13358751,Programme Delivery,40.0
+47546086,Stakeholder Management,0.0
+47546086,Power BI,40.0
+47546086,Data Governance,40.0
+47546086,ETL Design,40.0
+47546086,SQL,40.0
+47546086,Python,40.0
+47546086,Programme Delivery,40.0
+47546086,Risk Controls,40.0
+47546086,Regulatory Reporting,40.0
+47546086,Data Analysis,40.0
+72422,Data Analysis,0.0
+72422,Power BI,40.0
+72422,Regulatory Reporting,40.0
+72422,Programme Delivery,40.0
+72422,SQL,40.0
+72422,Risk Controls,40.0
+72422,ETL Design,0.0
+72422,Data Governance,40.0
+72422,Stakeholder Management,70.0
+7390515,SQL,40.0
+7390515,Data Analysis,40.0
+7390515,Stakeholder Management,0.0
+7390515,Data Governance,40.0
+7390515,Regulatory Reporting,40.0
+7390515,Power BI,40.0
+7390515,Programme Delivery,40.0
+7390515,ETL Design,40.0
+7390515,Python,40.0
+7390515,Risk Controls,40.0
+494468,SQL,40.0
+494468,Regulatory Reporting,40.0
+494468,Python,40.0
+494468,Power BI,40.0
+494468,Risk Controls,40.0
+494468,Data Governance,70.0
+494468,Programme Delivery,40.0
+494468,ETL Design,40.0
+494468,Stakeholder Management,0.0
+494468,Data Analysis,40.0
+47125,ETL Design,40.0
+47125,Regulatory Reporting,40.0
+47125,Data Analysis,40.0
+47125,Data Governance,70.0
+47125,Power BI,40.0
+47125,Risk Controls,40.0
+47125,Python,40.0
+47125,Programme Delivery,40.0
+47125,Stakeholder Management,40.0
+47125,SQL,40.0
+70260,Risk Controls,40.0
+70260,ETL Design,0.0
+70260,Regulatory Reporting,40.0
+70260,Power BI,40.0
+70260,Data Analysis,0.0
+70260,Data Governance,40.0
+70260,Programme Delivery,40.0
+70260,Python,0.0
+70260,SQL,40.0
+70260,Stakeholder Management,70.0
+71462,Stakeholder Management,40.0
+71462,Data Analysis,40.0
+71462,Risk Controls,40.0
+71462,Programme Delivery,40.0
+71462,ETL Design,40.0
+71462,SQL,40.0
+71462,Python,40.0
+71462,Regulatory Reporting,40.0
+23891786,Data Governance,40.0
+23891786,Programme Delivery,40.0
+23891786,Stakeholder Management,40.0
+23891786,Regulatory Reporting,40.0
+23891786,Risk Controls,40.0
+23891786,Python,40.0
+23891786,ETL Design,40.0
+23891786,Data Analysis,40.0
+23891786,SQL,40.0
+23891786,Power BI,40.0
+92590645,SQL,40.0
+92590645,Power BI,40.0
+92590645,Data Governance,40.0
+92590645,ETL Design,40.0
+92590645,Python,40.0
+92590645,Programme Delivery,40.0
+92590645,Data Analysis,40.0
+92590645,Stakeholder Management,0.0
+92590645,Risk Controls,40.0
+92590645,Regulatory Reporting,40.0
+853448,ETL Design,0.0
+853448,Data Analysis,0.0
+853448,Programme Delivery,40.0
+853448,Python,0.0
+853448,Stakeholder Management,70.0
+853448,Risk Controls,40.0
+853448,Power BI,40.0
+853448,Data Governance,40.0
+853448,Regulatory Reporting,40.0
+853448,SQL,40.0
+146489,Data Analysis,40.0
+146489,Risk Controls,40.0
+146489,ETL Design,40.0
+146489,Data Governance,70.0
+146489,SQL,40.0
+146489,Power BI,40.0
+146489,Regulatory Reporting,40.0
+146489,Python,40.0
+146489,Stakeholder Management,0.0
+1802018,Data Analysis,0.0
+1802018,Programme Delivery,40.0
+1802018,Data Governance,40.0
+1802018,Python,0.0
+1802018,SQL,40.0
+1802018,Stakeholder Management,70.0
+1802018,Risk Controls,40.0
+1802018,Regulatory Reporting,40.0
+1802018,Power BI,40.0
+1802018,ETL Design,0.0
+90882505,Programme Delivery,40.0
+90882505,Power BI,40.0
+90882505,Data Analysis,0.0
+90882505,Stakeholder Management,70.0
+7423230,Data Analysis,40.0
+7423230,Programme Delivery,0.0
+7423230,Power BI,40.0
+7423230,Stakeholder Management,70.0
+7423230,Regulatory Reporting,40.0
+7423230,Data Governance,0.0
+7423230,SQL,40.0
+7423230,Risk Controls,40.0
+7423230,ETL Design,0.0
+7423230,Python,40.0
+9240971,Power BI,40.0
+9240971,Python,40.0
+9240971,SQL,40.0
+9240971,Data Governance,70.0
+9240971,Risk Controls,40.0
+84040798,Stakeholder Management,0.0
+84040798,Regulatory Reporting,40.0
+84040798,Data Governance,70.0
+84040798,Programme Delivery,40.0
+84040798,Risk Controls,40.0
+84040798,ETL Design,40.0
+84040798,Data Analysis,40.0
+84040798,Power BI,40.0
+84040798,Python,40.0
+84040798,SQL,40.0
+27551135,Data Analysis,40.0
+27551135,ETL Design,0.0
+27551135,Data Governance,0.0
+27551135,Risk Controls,40.0
+27551135,SQL,40.0
+27551135,Programme Delivery,0.0
+27551135,Power BI,40.0
+77839607,Power BI,40.0
+77839607,Stakeholder Management,0.0
+77839607,Risk Controls,40.0
+77839607,Programme Delivery,40.0
+77839607,SQL,40.0
+77839607,Data Analysis,40.0
+77839607,Python,40.0
+77839607,ETL Design,40.0
+77839607,Regulatory Reporting,40.0
+77839607,Data Governance,40.0
+2233658,Data Governance,70.0
+2233658,Power BI,40.0
+2233658,Python,40.0
+2233658,Risk Controls,40.0
+2233658,Regulatory Reporting,40.0
+2233658,ETL Design,40.0
+2233658,Data Analysis,40.0
+2233658,SQL,40.0
+2233658,Programme Delivery,40.0
+2233658,Stakeholder Management,0.0
+32885741,SQL,40.0
+32885741,Stakeholder Management,0.0
+32885741,Regulatory Reporting,40.0
+32885741,Data Governance,70.0
+32885741,ETL Design,40.0
+32885741,Python,40.0
+32885741,Data Analysis,40.0
+32885741,Power BI,40.0
+32885741,Programme Delivery,40.0
+32885741,Risk Controls,40.0
+6943949,Python,0.0
+6943949,Power BI,40.0
+6943949,SQL,40.0
+6943949,Data Analysis,0.0
+6943949,Risk Controls,40.0
+6943949,Data Governance,40.0
+6943949,Stakeholder Management,70.0
+6943949,ETL Design,0.0
+6943949,Programme Delivery,40.0
+6943949,Regulatory Reporting,40.0
+97313825,SQL,40.0
+97313825,Regulatory Reporting,40.0
+97313825,Python,40.0
+97313825,Data Governance,40.0
+97313825,Data Analysis,40.0
+97313825,Stakeholder Management,0.0
+97313825,Risk Controls,40.0
+97313825,Programme Delivery,40.0
+97313825,ETL Design,40.0
+97313825,Power BI,40.0
+992400,Risk Controls,40.0
+992400,Regulatory Reporting,40.0
+992400,Data Analysis,40.0
+992400,ETL Design,40.0
+992400,SQL,40.0
+992400,Python,40.0
+992400,Stakeholder Management,0.0
+992400,Power BI,40.0
+992400,Programme Delivery,40.0
+577079,Regulatory Reporting,40.0
+577079,ETL Design,0.0
+577079,SQL,40.0
+577079,Power BI,40.0
+577079,Programme Delivery,40.0
+577079,Data Analysis,0.0
+577079,Stakeholder Management,70.0
+577079,Risk Controls,40.0
+577079,Python,0.0
+577079,Data Governance,40.0
+22205980,Regulatory Reporting,40.0
+22205980,Data Analysis,40.0
+22205980,Python,40.0
+22205980,Stakeholder Management,70.0
+22205980,ETL Design,0.0
+22205980,Programme Delivery,0.0
+22205980,Risk Controls,40.0
+22205980,Data Governance,0.0
+22205980,Power BI,40.0
+22205980,SQL,40.0
+903028,Risk Controls,40.0
+903028,Stakeholder Management,70.0
+903028,Power BI,40.0
+903028,Data Analysis,40.0
+903028,Programme Delivery,0.0
+903028,Regulatory Reporting,40.0
+903028,ETL Design,0.0
+903028,Data Governance,0.0
+903028,SQL,40.0
+903028,Python,40.0
+4162177,Programme Delivery,40.0
+4162177,SQL,40.0
+4162177,Data Analysis,40.0
+4162177,Stakeholder Management,40.0
+4162177,Risk Controls,40.0
+4162177,ETL Design,40.0
+4162177,Data Governance,40.0
+4162177,Regulatory Reporting,40.0
+4162177,Power BI,40.0
+4162177,Python,40.0
+4974590,Stakeholder Management,70.0
+4974590,Regulatory Reporting,40.0
+4974590,Python,40.0
+4974590,Risk Controls,40.0
+4974590,Power BI,40.0
+4974590,SQL,40.0
+4974590,Data Governance,0.0
+4974590,Programme Delivery,0.0
+4974590,Data Analysis,40.0
+4974590,ETL Design,0.0
+3421820,Stakeholder Management,70.0
+3421820,ETL Design,0.0
+3421820,Power BI,40.0
+3421820,SQL,40.0
+3421820,Risk Controls,40.0
+3421820,Python,0.0
+3421820,Regulatory Reporting,40.0
+3421820,Data Analysis,0.0
+3421820,Programme Delivery,40.0
+3421820,Data Governance,40.0
+602681,Risk Controls,40.0
+602681,ETL Design,40.0
+602681,Data Analysis,40.0
+602681,Programme Delivery,40.0
+602681,Regulatory Reporting,40.0
+602681,SQL,40.0
+602681,Python,40.0
+602681,Data Governance,40.0
+602681,Stakeholder Management,0.0
+602681,Power BI,40.0
+34702473,Regulatory Reporting,40.0
+34702473,Programme Delivery,40.0
+34702473,Data Governance,40.0
+34702473,SQL,40.0
+34702473,ETL Design,40.0
+34702473,Power BI,40.0
+34702473,Data Analysis,40.0
+34702473,Python,40.0
+34702473,Stakeholder Management,0.0
+34702473,Risk Controls,40.0
+60903955,SQL,40.0
+60903955,Python,40.0
+60903955,Data Governance,40.0
+60903955,Data Analysis,40.0
+60903955,Programme Delivery,40.0
+60903955,Regulatory Reporting,40.0
+60903955,ETL Design,40.0
+60903955,Stakeholder Management,40.0
+60903955,Risk Controls,40.0
+60903955,Power BI,40.0
+888795,Python,40.0
+888795,ETL Design,40.0
+888795,SQL,40.0
+888795,Data Analysis,40.0
+888795,Stakeholder Management,0.0
+888795,Data Governance,70.0
+888795,Programme Delivery,40.0
+888795,Regulatory Reporting,40.0
+888795,Risk Controls,40.0
+888795,Power BI,40.0
+473095,Power BI,40.0
+473095,Stakeholder Management,70.0
+473095,SQL,40.0
+473095,Programme Delivery,40.0
+473095,Regulatory Reporting,40.0
+473095,Python,0.0
+473095,Data Governance,40.0
+473095,ETL Design,0.0
+473095,Data Analysis,0.0
+473095,Risk Controls,40.0
+70242778,Stakeholder Management,0.0
+70242778,ETL Design,40.0
+70242778,Programme Delivery,40.0
+70242778,Risk Controls,40.0
+70242778,Data Governance,40.0
+70242778,SQL,40.0
+70242778,Data Analysis,40.0
+70242778,Python,40.0
+70242778,Power BI,40.0
+70242778,Regulatory Reporting,40.0
+3980258,Python,0.0
+3980258,Stakeholder Management,70.0
+3980258,Regulatory Reporting,40.0
+3980258,ETL Design,0.0
+3980258,SQL,40.0
+3980258,Data Governance,40.0
+3980258,Power BI,40.0
+3980258,Risk Controls,40.0
+3980258,Programme Delivery,40.0
+3980258,Data Analysis,0.0
+60598851,Data Analysis,0.0
+60598851,Risk Controls,40.0
+60598851,Data Governance,40.0
+60598851,SQL,40.0
+60598851,Programme Delivery,40.0
+60598851,Python,0.0
+60598851,Stakeholder Management,70.0
+60598851,Power BI,40.0
+60598851,Regulatory Reporting,40.0
+95295586,Regulatory Reporting,40.0
+95295586,Data Analysis,40.0
+95295586,Programme Delivery,40.0
+95295586,Risk Controls,40.0
+95295586,ETL Design,40.0
+95295586,SQL,40.0
+95295586,Power BI,40.0
+95295586,Data Governance,40.0
+95295586,Stakeholder Management,0.0
+95295586,Python,40.0
+4772246,SQL,40.0
+4772246,Power BI,40.0
+4772246,Regulatory Reporting,40.0
+4772246,Data Governance,40.0
+4772246,Risk Controls,40.0
+4772246,Stakeholder Management,70.0
+4772246,Python,0.0
+4772246,Programme Delivery,40.0
+320073,Data Governance,40.0
+320073,Python,40.0
+320073,ETL Design,40.0
+320073,Data Analysis,40.0
+320073,Risk Controls,40.0
+320073,Regulatory Reporting,40.0
+320073,Stakeholder Management,40.0
+320073,Power BI,40.0
+320073,Programme Delivery,40.0
+5153279,Data Governance,70.0
+5153279,Python,40.0
+5153279,Power BI,40.0
+5153279,SQL,40.0
+5153279,Data Analysis,40.0
+5153279,ETL Design,40.0
+5153279,Regulatory Reporting,40.0
+5153279,Programme Delivery,40.0
+5153279,Risk Controls,40.0
+46042404,Regulatory Reporting,40.0
+46042404,Risk Controls,40.0
+46042404,Python,40.0
+46042404,Power BI,40.0
+46042404,Data Governance,70.0
+46042404,Data Analysis,40.0
+46042404,ETL Design,40.0
+46042404,Stakeholder Management,0.0
+46042404,Programme Delivery,40.0
+46042404,SQL,40.0
+3777050,Data Analysis,40.0
+3777050,Stakeholder Management,40.0
+3777050,Python,40.0
+3777050,ETL Design,40.0
+3777050,Data Governance,70.0
+3777050,SQL,40.0
+3777050,Power BI,40.0
+3777050,Programme Delivery,40.0
+3777050,Risk Controls,40.0
+57182314,Stakeholder Management,40.0
+57182314,Data Governance,40.0
+57182314,Python,40.0
+57182314,Risk Controls,40.0
+57182314,Programme Delivery,40.0
+57182314,SQL,40.0
+57182314,Data Analysis,40.0
+57182314,ETL Design,40.0
+57182314,Regulatory Reporting,40.0
+57182314,Power BI,40.0

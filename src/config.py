@@ -23,7 +23,10 @@ class PipelineConfig:
     biography_dataset_csv_path: Path = Path("data/outputs/biography_dataset.csv")
     biography_normalized_dataset_csv_path: Path = Path("data/outputs/biography_normalized_dataset.csv")
     biography_score_output_csv_path: Path = Path("data/outputs/biography_competency_scores.csv")
+    final_competency_dataset_csv_path: Path = Path("data/outputs/final_competency_dataset.csv")
     biography_evaluation_csv_path: Path = Path("data/outputs/biography_competency_evaluation.csv")
+    skill_specific_profile_output_csv_path: Path = Path("data/outputs/skill_specific_profiles.csv")
+    taxonomy_output_dir: Path = Path("data/outputs/taxonomy")
     evaluation_skill_summary_csv_path: Path = Path("data/outputs/competency_score_skill_summary.csv")
     evaluation_band_summary_csv_path: Path = Path("data/outputs/competency_score_band_summary.csv")
     evaluation_employee_summary_csv_path: Path = Path("data/outputs/competency_score_employee_summary.csv")
@@ -46,12 +49,29 @@ class PipelineConfig:
     exact_match_weight: float = 0.6
     semantic_similarity_weight: float = 0.4
     semantic_similarity_strong_threshold: float = 0.12
+    sentence_transformer_model_name: str = field(
+        default_factory=lambda: os.getenv("SENTENCE_TRANSFORMER_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+    )
+    embedding_similarity_threshold: float = 0.50
+    tfidf_weight_with_alias: float = 0.70
+    alias_weight_in_final: float = 0.30
+    tfidf_weight_with_embedding: float = 0.60
+    embedding_weight_in_final: float = 0.40
+    graph_boost_factor: float = 0.20
+    minimum_output_skill_score: float = 0.12
     llm_model_name: str = field(default_factory=lambda: os.getenv("OPENAI_MODEL_NAME", "gpt-4o-mini"))
     llm_base_url: str | None = field(default_factory=lambda: os.getenv("OPENAI_BASE_URL"))
     skill_focused_rewrite_enabled: bool = field(
         default_factory=lambda: os.getenv("OPENAI_SKILL_FOCUSED_REWRITE", "1").strip().lower()
         not in {"0", "false", "no"}
     )
+    skill_profile_top_k_chunks: int = 3
+    skill_profile_min_chunk_score: float = 0.03
+    skill_profile_min_llm_confidence: float = 0.35
+    skill_profile_reference_alignment_min_confidence: float = 0.4
+    skill_profile_reference_skill_prefix_min_confidence: float = 0.55
+    demonstrated_skill_top_k: int = 3
+    demonstrated_skill_min_score: float = 0.08
     score_bands: tuple[ScoreBand, ...] = (
         ScoreBand(label="low", minimum_score=0.0),
         ScoreBand(label="medium", minimum_score=25.0),

@@ -55,10 +55,17 @@ class FakeSkillRewriteClient:
             @staticmethod
             def create(*args, **kwargs):
                 payload = {
-                    "skill_focused_description": "python scripting automation and reporting",
-                    "evidence_strength": "high",
+                    "skill_specific_profile": "python scripting automation and reporting",
                 }
                 return FakeResponse(json.dumps(payload))
+
+
+class ExplodingClient:
+    class chat:
+        class completions:
+            @staticmethod
+            def create(*args, **kwargs):
+                raise RuntimeError("boom")
 
 
 def test_llm_prompt_constant_contains_required_schema():
@@ -109,6 +116,60 @@ def test_normalize_biography_dataframe_creates_scoring_description():
     assert normalized.loc[0, "description"] == normalized.loc[0, "clean_skill_evidence_text"]
 
 
+def test_normalize_biography_text_fallback_retrieves_biography_skill_evidence():
+    config = PipelineConfig(
+        skill_references={
+            "power bi": "Uses Power BI to build dashboards, visualise data, and communicate performance insights.",
+            "data governance": "Supports data governance through data quality controls and standards.",
+        },
+        skill_aliases={
+            "power bi": ("dashboards",),
+            "data governance": ("data quality",),
+        },
+    )
+
+    result = normalize_biography_text(
+        biography_text="Built dashboards for executive reporting and improved data quality controls.",
+        description_text="Planned office events and budget tracking.",
+        position="Consultant",
+        allowed_skills=["Power BI", "Data Governance"],
+        config=config,
+        client=ExplodingClient(),
+    )
+
+    assert [item["skill"] for item in result["matched_skills"]] == ["Power BI", "Data Governance"]
+    assert "built dashboards for executive reporting" in result["clean_skill_evidence_text"]
+    assert "planned office events" not in result["clean_skill_evidence_text"]
+
+
+def test_normalize_biography_dataframe_fallback_uses_biography_not_job_history():
+    config = PipelineConfig(
+        skill_references={
+            "python": "Uses Python for scripting automation and data analysis.",
+        },
+        skill_aliases={
+            "python": ("python automation",),
+        },
+    )
+    df = pd.DataFrame(
+        [
+            {
+                "talentlinkId": "1001",
+                "skills": ["Python"],
+                "biography": "Built Python automation for reporting.",
+                "description": "Planned office events and catering budgets.",
+                "position": "Consultant",
+            }
+        ]
+    )
+
+    normalized = normalize_biography_dataframe(df, config=config, client=ExplodingClient())
+
+    assert normalized.loc[0, "description"] == "built python automation for reporting"
+    assert normalized.loc[0, "matched_skills_json"] != "[]"
+    assert "Planned office events" not in normalized.loc[0, "clean_skill_evidence_text"]
+
+
 def test_rewrite_description_for_skill_returns_skill_focused_text():
     payload = rewrite_description_for_skill(
         cleaned_description="planned office events python scripting automation and reporting",
@@ -118,4 +179,4 @@ def test_rewrite_description_for_skill_returns_skill_focused_text():
     )
 
     assert payload["skill_focused_description"] == "python scripting automation and reporting"
-    assert payload["evidence_strength"] == "high"
+    assert payload["evidence_strength"] == "medium"
